@@ -12,10 +12,9 @@ import Mousetrap from "mousetrap";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
-import { Direction, Ordering } from "./types/types";
-
 import FilterDrawer from "./components/FilterDrawer";
 import useRouteParamsState from "./hooks/useRouteParamsState";
+import { Direction, Ordering } from "./types/types";
 
 const StyledGraphQLTable = styled.div`
   .ant-pagination-item {

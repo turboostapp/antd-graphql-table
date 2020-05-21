@@ -23,14 +23,11 @@
   },
   "homepage": "https://github.com/shadowolfapp/antd-graphql-table#readme",
   "dependencies": {
-    "@ant-design/icons": "^4.1.0",
     "antd": "^4.2.4",
     "antd-simple-table": "^1.0.5",
-    "moment": "^2.25.3",
     "mousetrap": "^1.6.5",
     "qs": "^6.9.4",
     "react-router-dom": "^5.2.0",
-    "react-use": "^15.1.0",
     "styled-components": "^5.1.0"
   },
   "devDependencies": {
