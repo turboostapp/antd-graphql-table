@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import keyboard from "keyboardjs";
 
-export default function useTurnPageByKeyboard(
-  handle: (nextPage: number) => Promise<void>,
-  page: number
+export default function useChangePageByKeyboard(
+  page: number,
+  handle: (nextPage: number) => Promise<void>
 ) {
   useEffect(() => {
     keyboard.bind("j", () => handle(page - 1));

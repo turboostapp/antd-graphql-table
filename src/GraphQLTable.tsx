@@ -10,7 +10,7 @@ import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import omit from "lodash/omit";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import useTurnPageByKeyboard from "./hooks/useTurnPageByKeyboard";
+import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import FilterDrawer from "./components/FilterDrawer";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { Direction, Ordering } from "./types/types";
@@ -71,7 +71,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [sortValue, setSortValue] = useState("");
 
-  const [query, setQuery] = useState<string>(variables.query || "");
+  const [query, setQuery] = useState<string>("");
 
   // 控件绑定的值，不包含 > <
   const [bindValues, setBindValues] = useState<{
@@ -110,7 +110,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
   );
 
   // 翻页快捷键
-  useTurnPageByKeyboard(handlePageChange, page);
+  useChangePageByKeyboard(page, handlePageChange);
 
   // 解决 refresh 后 page 未恢复
   useEffect(() => {
