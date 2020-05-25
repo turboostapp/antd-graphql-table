@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "module": "esNext",
-    "target": "esNext",
+    "target": "es5",
     "sourceMap": true,
     "allowJs": true,
     "jsx": "react",
@@ -18,8 +18,8 @@
     "emitDecoratorMetadata": true,
     "noImplicitReturns": true,
     "suppressImplicitAnyIndexErrors": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "typeRoots": ["node_modules/@types"]
   },
-  "include": ["./src"],
   "exclude": ["node_modules"]
 }
