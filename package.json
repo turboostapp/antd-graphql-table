@@ -25,7 +25,7 @@
   "dependencies": {
     "antd": "^4.2.4",
     "antd-simple-table": "^1.0.5",
-    "mousetrap": "^1.6.5",
+    "keyboardjs": "^2.5.1",
     "qs": "^6.9.4",
     "react-router-dom": "^5.2.0",
     "styled-components": "^5.1.0"
@@ -40,6 +40,7 @@
     "@storybook/addon-info": "^5.3.18",
     "@storybook/addon-options": "^5.3.18",
     "@storybook/react": "^5.3.18",
+    "@types/keyboardjs": "^2.5.0",
     "@types/lodash": "^4.14.152",
     "@types/mousetrap": "^1.6.3",
     "@types/qs": "^6.9.3",

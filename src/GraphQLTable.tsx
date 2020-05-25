@@ -8,10 +8,9 @@ import {
 } from "antd-simple-table";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import omit from "lodash/omit";
-import Mousetrap from "mousetrap";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-
+import useTurnPageByKeyboard from "./hooks/useTurnPageByKeyboard";
 import FilterDrawer from "./components/FilterDrawer";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { Direction, Ordering } from "./types/types";
@@ -111,11 +110,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
   );
 
   // 翻页快捷键
-  useEffect(() => {
-    Mousetrap.bind(["j"], () => handlePageChange(page - 1));
-    Mousetrap.bind(["k"], () => handlePageChange(page + 1));
-    return () => Mousetrap.unbind("j", "k");
-  }, [handlePageChange, page]);
+  useTurnPageByKeyboard(handlePageChange, page);
 
   // 解决 refresh 后 page 未恢复
   useEffect(() => {
