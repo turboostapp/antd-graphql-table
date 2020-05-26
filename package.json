@@ -24,7 +24,7 @@
   "homepage": "https://github.com/shadowolfapp/antd-graphql-table#readme",
   "dependencies": {
     "antd": "^4.2.4",
-    "antd-simple-table": "^1.0.5",
+    "antd-simple-table": "^1.1.0",
     "keyboardjs": "^2.5.1",
     "qs": "^6.9.4",
     "react-router-dom": "^5.2.0",

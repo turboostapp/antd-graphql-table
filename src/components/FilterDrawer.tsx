@@ -1,8 +1,9 @@
 import { Button, Checkbox, Collapse, Drawer, Input, Select } from "antd";
-import { FilterType, SimpleColumnType } from "antd-simple-table";
+import { FilterType } from "../types/FilterType";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { GraphQlTableColumnType } from "../interfaces/GraphQlTableColumnType";
 
 import getDataIndex from "../utils/getDataIndex";
 
@@ -44,7 +45,7 @@ export interface FilterProps {
 }
 
 interface FilterDrawerProps<T> {
-  columns: SimpleColumnType<T>[];
+  columns: GraphQlTableColumnType<T>[];
   visible: boolean;
   filters: FilterProps;
   bindValues: FilterProps;
