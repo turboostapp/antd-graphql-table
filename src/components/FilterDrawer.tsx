@@ -1,10 +1,18 @@
-import { Button, Checkbox, Collapse, Drawer, Input, Select } from "antd";
+import {
+  Button,
+  Checkbox,
+  Collapse,
+  DatePicker,
+  Drawer,
+  Input,
+  Select,
+} from "antd";
 import { FilterType } from "../types/FilterType";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { GraphQlTableColumnType } from "../interfaces/GraphQlTableColumnType";
-
+import moment from "moment";
 import getDataIndex from "../utils/getDataIndex";
 
 const { Panel } = Collapse;
@@ -76,9 +84,12 @@ export default function FilterDrawer<T extends {}>({
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
 
-      // 将 column 中是 selectInput 类型的都取出来，将 dataIndex 放进 selectArr 中
+      // 将 column 中是 selectInput DateRangePicker DateTimeRangePicker 类型的都取出来，将 dataIndex 放进 selectArr 中
       const columnsResults = columns.filter(
-        (item) => item.filterType === FilterType.SelectInput
+        (item) =>
+          item.filterType === FilterType.SelectInput ||
+          item.filterType === FilterType.DateRangePicker ||
+          item.filterType === FilterType.DateTimeRangePicker
       );
       const selectArr = [];
       if (columns.length > 0) {
@@ -87,7 +98,7 @@ export default function FilterDrawer<T extends {}>({
         });
       }
 
-      // 判断 url 中的 filter 是否有 selectInput 类型，且包含 > < 符号的，需拆开
+      // 判断 url 中的 filter 是否有 selectInput DateRangePicker DateTimeRangePicker 类型，且包含 > < 符号的，需拆开
       const tempSelectValues = {};
       Object.keys(tempFilter).forEach((key) => {
         if (selectArr.includes(key)) {
@@ -191,8 +202,23 @@ export default function FilterDrawer<T extends {}>({
                       value={selectValues[columnIndex]}
                       onChange={(value) => {
                         const tempSelectValues = { ...selectValues };
+                        const tempFilters = { ...filters };
                         tempSelectValues[columnIndex] = value;
                         setSelectValues(tempSelectValues);
+                        if (tempFilters[columnIndex]) {
+                          tempFilters[columnIndex] = [
+                            (value === "=" ? "" : value) +
+                              bindValues[columnIndex][0],
+                          ];
+                          onFiltersChange(tempFilters);
+                          onSubmit(tempFilters);
+                          onRouteParamsChange({
+                            ...routeParams,
+                            filter: encodeURIComponent(
+                              JSON.stringify(tempFilters)
+                            ),
+                          });
+                        }
                       }}
                     >
                       <Option value="=">=</Option>
@@ -252,17 +278,108 @@ export default function FilterDrawer<T extends {}>({
                     onClick={() => {
                       const tempBindValues = { ...bindValues };
                       const tempFilters = { ...filters };
-                      const tempSelectValues = { ...selectValues };
                       delete tempBindValues[columnIndex];
                       delete tempFilters[columnIndex];
-                      tempSelectValues[columnIndex] = "=";
                       onBindValuesChange(tempBindValues);
                       onFiltersChange(tempFilters);
                       onRouteParamsChange({
                         ...routeParams,
                         filter: encodeURIComponent(JSON.stringify(tempFilters)),
                       });
-                      setSelectValues(tempSelectValues);
+                      onSubmit(tempFilters);
+                    }}
+                  >
+                    清除
+                  </StyledButton>
+                </>
+              )}
+              {(columnsFilterResult.filterType === FilterType.DateRangePicker ||
+                columnsFilterResult.filterType ===
+                  FilterType.DateTimeRangePicker) && (
+                <>
+                  <Input.Group compact>
+                    <Select
+                      defaultValue="="
+                      style={{ width: "20%" }}
+                      value={selectValues[columnIndex]}
+                      onChange={(value) => {
+                        const tempSelectValues = { ...selectValues };
+                        const tempFilters = { ...filters };
+                        tempSelectValues[columnIndex] = value;
+                        setSelectValues(tempSelectValues);
+                        if (tempFilters[columnIndex]) {
+                          tempFilters[columnIndex] = [
+                            (value === "=" ? "" : value) +
+                              bindValues[columnIndex][0],
+                          ];
+                          onFiltersChange(tempFilters);
+                          onSubmit(tempFilters);
+                          onRouteParamsChange({
+                            ...routeParams,
+                            filter: encodeURIComponent(
+                              JSON.stringify(tempFilters)
+                            ),
+                          });
+                        }
+                      }}
+                    >
+                      <Option value="=">=</Option>
+                      <Option value=">">&gt;</Option>
+                      <Option value="<">&lt;</Option>
+                    </Select>
+                    <DatePicker
+                      showTime={
+                        columnsFilterResult.filterType ===
+                        FilterType.DateRangePicker
+                          ? false
+                          : true
+                      }
+                      style={{ width: "80%" }}
+                      value={
+                        bindValues[columnIndex]
+                          ? moment(bindValues[columnIndex][0] as string)
+                          : null
+                      }
+                      onChange={(date, dateString) => {
+                        const tempBindValues = { ...bindValues };
+                        const tempFilters = { ...filters };
+                        tempBindValues[columnIndex] = [dateString];
+                        tempFilters[columnIndex] = [
+                          (selectValues[columnIndex] === "=" ||
+                          !selectValues[columnIndex]
+                            ? ""
+                            : selectValues[columnIndex]) + dateString,
+                        ];
+                        if (!date) {
+                          delete tempBindValues[columnIndex];
+                          delete tempFilters[columnIndex];
+                        }
+                        onFiltersChange(tempFilters);
+                        onBindValuesChange(tempBindValues);
+                        onSubmit(tempFilters);
+                        onRouteParamsChange({
+                          ...routeParams,
+                          filter: encodeURIComponent(
+                            JSON.stringify(tempFilters)
+                          ),
+                        });
+                      }}
+                    />
+                  </Input.Group>
+                  <StyledButton
+                    type="link"
+                    onClick={() => {
+                      const tempBindValues = { ...bindValues };
+                      const tempFilters = { ...filters };
+                      delete tempBindValues[columnIndex];
+                      delete tempFilters[columnIndex];
+                      onBindValuesChange(tempBindValues);
+                      onFiltersChange(tempFilters);
+                      onRouteParamsChange({
+                        ...routeParams,
+                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
+                      });
+
                       onSubmit(tempFilters);
                     }}
                   >

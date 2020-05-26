@@ -265,9 +265,12 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     }
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
-      // 将 column 中是 selectInput 类型的都取出来，将 dataIndex 放进 selectArr 中
+      // 将 column 中是 selectInput DateRangePicker DateTimeRangePicker 类型的都取出来，将 dataIndex 放进 selectArr 中
       const columnsResults = columnsFilterResults.filter(
-        (item) => item.filterType === FilterType.SelectInput
+        (item) =>
+          item.filterType === FilterType.SelectInput ||
+          item.filterType === FilterType.DateRangePicker ||
+          item.filterType === FilterType.DateTimeRangePicker
       );
       const selectArr = [];
       if (columnsFilterResults.length > 0) {
@@ -275,7 +278,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
           selectArr.push(item.dataIndex);
         });
       }
-      // 判断 url 中的 filter 是否有 selectInput 类型，且包含 > < 符号的，需拆开
+      // 判断 url 中的 filter 是否有 selectInput DateRangePicker DateTimeRangePicker 类型，且包含 > < 符号的，需拆开
       Object.keys(tempFilter).forEach((key) => {
         if (selectArr.includes(key)) {
           tempFilter[key][0] = tempFilter[key][0].replace(/[>|<]/, "");
@@ -402,7 +405,11 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
                 const result = columnsFilterResults.find(
                   (item) => item.dataIndex === tag.field
                 );
-                if (result?.filterType === FilterType.SelectInput) {
+                if (
+                  result?.filterType === FilterType.SelectInput ||
+                  result?.filterType === FilterType.DateRangePicker ||
+                  result?.filterType === FilterType.DateTimeRangePicker
+                ) {
                   delete tempBindValues[tag.field];
                 } else if (tag.field !== "tags") {
                   tempBindValues[tag.field] = tempBindValues[tag.field].filter(
