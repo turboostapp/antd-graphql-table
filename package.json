@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc --emitDeclarationOnly && babel src --out-dir dist --extensions \".ts,.tsx\"",
+    "build": "rm -rf dist && tsc --emitDeclarationOnly && babel src --out-dir dist --extensions \".ts,.tsx\"",
     "dev": "tsc -w",
     "format": "prettier --write \"src/**/*.ts\" \"stories/**/*.ts\"",
     "lint": "eslint \"{src,stories}/**/*.{js,jsx,ts,tsx}\" --fix",
