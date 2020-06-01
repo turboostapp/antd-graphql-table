@@ -54,6 +54,7 @@ export interface FilterProps {
 
 interface FilterDrawerProps<T> {
   columns: GraphQlTableColumnType<T>[];
+  columnSymbolResults: string[];
   visible: boolean;
   filters: FilterProps;
   bindValues: FilterProps;
@@ -69,6 +70,7 @@ interface FilterDrawerProps<T> {
 
 export default function FilterDrawer<T extends {}>({
   columns,
+  columnSymbolResults,
   visible,
   filters,
   bindValues,
@@ -84,24 +86,10 @@ export default function FilterDrawer<T extends {}>({
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
 
-      // 将 column 中是 selectInput DateRangePicker DateTimeRangePicker 类型的都取出来，将 dataIndex 放进 selectArr 中
-      const columnsResults = columns.filter(
-        (item) =>
-          item.filterType === FilterType.SelectInput ||
-          item.filterType === FilterType.DateRangePicker ||
-          item.filterType === FilterType.DateTimeRangePicker
-      );
-      const selectArr = [];
-      if (columns.length > 0) {
-        columnsResults.forEach((item) => {
-          selectArr.push(item.dataIndex);
-        });
-      }
-
       // 判断 url 中的 filter 是否有 selectInput DateRangePicker DateTimeRangePicker 类型，且包含 > < 符号的，需拆开
       const tempSelectValues = {};
       Object.keys(tempFilter).forEach((key) => {
-        if (selectArr.includes(key)) {
+        if (columnSymbolResults.includes(key)) {
           const firstString = tempFilter[key][0].slice(0, 1);
           if (firstString === "<" || firstString === ">") {
             tempSelectValues[key] = firstString;
@@ -205,6 +193,7 @@ export default function FilterDrawer<T extends {}>({
                         const tempFilters = { ...filters };
                         tempSelectValues[columnIndex] = value;
                         setSelectValues(tempSelectValues);
+                        // 如果右边输入框有值，改变符号也会触发
                         if (tempFilters[columnIndex]) {
                           tempFilters[columnIndex] = [
                             (value === "=" ? "" : value) +
@@ -234,15 +223,14 @@ export default function FilterDrawer<T extends {}>({
                       }`}
                       onChange={(event) => {
                         const tempBindValues = { ...bindValues };
-                        tempBindValues[columnIndex] = [
-                          event.target.value.replace(/[^(\d|.|\-|:|\s)]/g, ""),
-                        ];
-                        if (
-                          event.target.value.replace(
-                            /[^(\d|.|\-|:|\s)]/g,
-                            ""
-                          ) === ""
-                        ) {
+                        const value = event.target.value.replace(
+                          /[^(\d|.|\-|:|\s)]/g,
+                          ""
+                        );
+
+                        if (value) {
+                          tempBindValues[columnIndex] = [value];
+                        } else {
                           delete tempBindValues[columnIndex];
                         }
                         onBindValuesChange(tempBindValues);
@@ -307,6 +295,7 @@ export default function FilterDrawer<T extends {}>({
                         const tempFilters = { ...filters };
                         tempSelectValues[columnIndex] = value;
                         setSelectValues(tempSelectValues);
+                        // 如果右边输入框有值，改变符号也会触发
                         if (tempFilters[columnIndex]) {
                           tempFilters[columnIndex] = [
                             (value === "=" ? "" : value) +

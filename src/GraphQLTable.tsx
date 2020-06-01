@@ -131,6 +131,21 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     [columns]
   );
 
+  // 过滤类型为SelectInput DateRangePicker DateTimeRangePicker 的 dataIndex 数组
+  const columnSymbolResults = useMemo(() => {
+    const columnsResults = columnsFilterResults.filter(
+      (item) =>
+        item.filterType === FilterType.SelectInput ||
+        item.filterType === FilterType.DateRangePicker ||
+        item.filterType === FilterType.DateTimeRangePicker
+    );
+    const array = [];
+    columnsResults.forEach((item) => {
+      array.push(item.dataIndex);
+    });
+    return array;
+  }, [columnsFilterResults]);
+
   const handelSubmitFilters = useCallback(
     (
       parameterFilters: {
@@ -140,23 +155,13 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
       parameterOrderBy?: string
     ) => {
       let newFilter = "";
-      // 将 column 中是 selectInput 类型的都取出来，将 dataIndex 放进 selectArr 中
-      const columnsResults = columnsFilterResults.filter(
-        (item) => item.filterType === FilterType.SelectInput
-      );
-      const selectArr = [];
-      if (columnsFilterResults.length > 0) {
-        columnsResults.forEach((item) => {
-          selectArr.push(item.dataIndex);
-        });
-      }
       Object.entries(parameterFilters).forEach(([field, values]) => {
         if (values && values[0] !== "") {
           values.forEach((value) => {
             let newValue = value;
             if (typeof newValue === "string") {
               // 如果是 selectInput 类型的
-              if (selectArr.includes(field)) {
+              if (columnSymbolResults.includes(field)) {
                 if (!/(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)) {
                   if (/^[<>]/.test(newValue)) {
                     newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(
@@ -265,22 +270,9 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     }
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
-      // 将 column 中是 selectInput DateRangePicker DateTimeRangePicker 类型的都取出来，将 dataIndex 放进 selectArr 中
-      const columnsResults = columnsFilterResults.filter(
-        (item) =>
-          item.filterType === FilterType.SelectInput ||
-          item.filterType === FilterType.DateRangePicker ||
-          item.filterType === FilterType.DateTimeRangePicker
-      );
-      const selectArr = [];
-      if (columnsFilterResults.length > 0) {
-        columnsResults.forEach((item) => {
-          selectArr.push(item.dataIndex);
-        });
-      }
       // 判断 url 中的 filter 是否有 selectInput DateRangePicker DateTimeRangePicker 类型，且包含 > < 符号的，需拆开
       Object.keys(tempFilter).forEach((key) => {
-        if (selectArr.includes(key)) {
+        if (columnSymbolResults.includes(key)) {
           tempFilter[key][0] = tempFilter[key][0].replace(/[>|<]/, "");
         }
       });
@@ -298,6 +290,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
       <FilterDrawer
         bindValues={bindValues}
         columns={columnsFilterResults}
+        columnSymbolResults={columnSymbolResults}
         filters={filters}
         routeParams={routeParams}
         visible={drawerVisible}
