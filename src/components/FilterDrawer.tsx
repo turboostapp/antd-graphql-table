@@ -3,7 +3,7 @@ import { FilterType } from "../types/FilterType";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { GraphQlTableColumnType } from "../interfaces/GraphQlTableColumnType";
+import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType";
 
 import getDataIndex from "../utils/getDataIndex";
 
@@ -45,7 +45,7 @@ export interface FilterProps {
 }
 
 interface FilterDrawerProps<T> {
-  columns: GraphQlTableColumnType<T>[];
+  columns: GraphQLTableColumnType<T>[];
   visible: boolean;
   filters: FilterProps;
   bindValues: FilterProps;

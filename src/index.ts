@@ -1,3 +1,3 @@
 export * from "./GraphQLTable";
 export * from "./types/FilterType";
-export * from "./interfaces/GraphQlTableColumnType";
+export * from "./interfaces/GraphQLTableColumnType";
