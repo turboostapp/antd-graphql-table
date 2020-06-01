@@ -131,7 +131,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     [columns]
   );
 
-  // 过滤类型为SelectInput DateRangePicker DateTimeRangePicker 的 dataIndex 数组
+  // 过滤类型为 SelectInput DateRangePicker DateTimeRangePicker 的 dataIndex 数组
   const columnSymbolResults = useMemo(() => {
     const columnsResults = columnsFilterResults.filter(
       (item) =>
@@ -160,7 +160,6 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
           values.forEach((value) => {
             let newValue = value;
             if (typeof newValue === "string") {
-              // 如果是 selectInput 类型的
               if (columnSymbolResults.includes(field)) {
                 if (!/(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)) {
                   if (/^[<>]/.test(newValue)) {
