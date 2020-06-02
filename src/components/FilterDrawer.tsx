@@ -227,7 +227,6 @@ export default function FilterDrawer<T extends {}>({
                           /[^(\d|.|\-|:|\s)]/g,
                           ""
                         );
-
                         if (value) {
                           tempBindValues[columnIndex] = [value];
                         } else {
@@ -368,7 +367,6 @@ export default function FilterDrawer<T extends {}>({
                         ...routeParams,
                         filter: encodeURIComponent(JSON.stringify(tempFilters)),
                       });
-
                       onSubmit(tempFilters);
                     }}
                   >
