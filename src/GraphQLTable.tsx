@@ -14,7 +14,7 @@ import FilterDrawer from "./components/FilterDrawer";
 import { FilterType } from "./types/FilterType";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { Direction, Ordering } from "./types/BaseTypes";
-import { GraphQlTableColumnType } from "./interfaces/GraphQlTableColumnType";
+import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
 
 const StyledGraphQLTable = styled.div`
   .ant-pagination-item {
@@ -49,7 +49,7 @@ export interface Variables {
 
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   dataSource: T[];
-  columns: GraphQlTableColumnType<T>[];
+  columns: GraphQLTableColumnType<T>[];
   hasMore: boolean;
   variables: Variables;
   onLoadMore?: () => void | Promise<void>;

@@ -11,7 +11,7 @@ import { FilterType } from "../types/FilterType";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { GraphQlTableColumnType } from "../interfaces/GraphQlTableColumnType";
+import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType";
 import moment from "moment";
 import getDataIndex from "../utils/getDataIndex";
 
@@ -53,7 +53,7 @@ export interface FilterProps {
 }
 
 interface FilterDrawerProps<T> {
-  columns: GraphQlTableColumnType<T>[];
+  columns: GraphQLTableColumnType<T>[];
   columnSymbolResults: string[];
   visible: boolean;
   filters: FilterProps;
@@ -368,7 +368,6 @@ export default function FilterDrawer<T extends {}>({
                         ...routeParams,
                         filter: encodeURIComponent(JSON.stringify(tempFilters)),
                       });
-
                       onSubmit(tempFilters);
                     }}
                   >
