@@ -14,7 +14,7 @@ import FilterDrawer from "./components/FilterDrawer";
 import { FilterType } from "./types/FilterType";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { Direction, Ordering } from "./types/BaseTypes";
-import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType1";
+import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
 
 const StyledGraphQLTable = styled.div`
   .ant-pagination-item {

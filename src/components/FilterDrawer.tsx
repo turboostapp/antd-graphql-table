@@ -11,7 +11,7 @@ import { FilterType } from "../types/FilterType";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType1";
+import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType";
 import moment from "moment";
 import getDataIndex from "../utils/getDataIndex";
 
