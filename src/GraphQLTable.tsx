@@ -52,6 +52,7 @@ export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   columns: GraphQlTableColumnType<T>[];
   hasMore: boolean;
   variables: Variables;
+  defaultSort?: Ordering;
   onLoadMore?: () => void | Promise<void>;
   onVariablesChange: (variables: Variables) => void;
 }
@@ -63,6 +64,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     hasMore,
     loading,
     variables = {},
+    defaultSort,
     onLoadMore,
     onVariablesChange,
   } = props;
@@ -251,6 +253,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
   );
 
   useEffect(() => {
+    const sort =
+      defaultSort?.sort && defaultSort?.direction
+        ? `${defaultSort?.sort} ${defaultSort?.direction}`
+        : "";
     handelSubmitFilters(
       routeParams.filter
         ? JSON.parse(decodeURIComponent(routeParams.filter))
@@ -258,7 +264,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
       routeParams.query,
       routeParams.sort && routeParams.direction
         ? `${routeParams.sort} ${routeParams.direction}`
-        : ""
+        : sort
     );
     if (routeParams.query) {
       setQuery(routeParams.query);
@@ -286,6 +292,13 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     }
     if (routeParams.sort && routeParams.direction) {
       setSortValue(`${routeParams.sort} ${routeParams.direction}`);
+    } else if (defaultSort?.sort && defaultSort?.direction) {
+      setSortValue(`${defaultSort?.sort} ${defaultSort?.direction}`);
+      setRouteParams({
+        ...routeParams,
+        sort: defaultSort?.sort,
+        direction: defaultSort?.direction,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
