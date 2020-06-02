@@ -3,7 +3,7 @@ import { FilterType } from "../types/FilterType";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType";
+import { GraphQLTableColumnType } from "../interfaces/Temp";
 
 import getDataIndex from "../utils/getDataIndex";
 
