@@ -21,7 +21,7 @@
     "react/prop-types": "off",
     "simple-import-sort/sort": "error",
     "@typescript-eslint/strict-boolean-expressions": "off",
-    "@typescript-eslint/no-floating-promises": "off",
-    "@typescript-eslint/no-dynamic-delete": "off"
+    "@typescript-eslint/no-dynamic-delete": "off",
+    "@typescript-eslint/restrict-template-expressions": "off"
   }
 }

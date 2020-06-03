@@ -167,23 +167,25 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       Object.entries(parameterFilters).forEach(([field, values]) => {
         if (values && values[0] !== "") {
           values.forEach((value) => {
-            let newValue = String(value);
-            if (columnSymbolResults.includes(field)) {
-              if (!/(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)) {
-                if (/^[<>]/.test(newValue)) {
-                  newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(
-                    newValue.slice(1)
-                  )
-                    ? newValue
-                    : `${newValue.slice(0, 1)}"${newValue.slice(1)}"`;
-                } else {
-                  newValue = `"${newValue}"`;
+            let newValue = value;
+            if (typeof newValue === "string") {
+              if (columnSymbolResults.includes(field)) {
+                if (!/(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)) {
+                  if (/^[<>]/.test(newValue)) {
+                    newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(
+                      newValue.slice(1)
+                    )
+                      ? newValue
+                      : `${newValue.slice(0, 1)}"${newValue.slice(1)}"`;
+                  } else {
+                    newValue = `"${newValue}"`;
+                  }
                 }
+              } else {
+                newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)
+                  ? newValue
+                  : `"${newValue}"`;
               }
-            } else {
-              newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)
-                ? newValue
-                : `"${newValue}"`;
             }
             newFilter = `${
               newFilter ? `${newFilter} ` : ""
@@ -408,7 +410,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
           return tagList.map((tag) => (
             <Tag
               closable
-              key={`${tag.field}:${String(tag.value)}`}
+              key={`${tag.field}:${tag.value}`}
               onClose={() => {
                 // 处理filters,例如此时标签的值为 >123,但输入框里需显示为123，要做特殊处理
                 const tempBindValues = { ...bindValues };
