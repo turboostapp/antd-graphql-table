@@ -7,14 +7,21 @@ import {
 } from "antd-simple-table";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import omit from "lodash/omit";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import styled from "styled-components";
-import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
+
 import FilterDrawer from "./components/FilterDrawer";
-import { FilterType } from "./types/FilterType";
+import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
-import { Direction, Ordering } from "./types/BaseTypes";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
+import { Direction, Ordering } from "./types/BaseTypes";
+import { FilterType } from "./types/FilterType";
 
 const StyledGraphQLTable = styled.div`
   .ant-pagination-item {
@@ -49,20 +56,22 @@ export interface Variables {
 
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   dataSource: T[];
-  columns: GraphQLTableColumnType<T>[];
+  columns: Array<GraphQLTableColumnType<T>>;
   hasMore: boolean;
   variables: Variables;
+  defaultSort?: Ordering;
   onLoadMore?: () => void | Promise<void>;
   onVariablesChange: (variables: Variables) => void;
 }
 
-export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
+export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const {
     columns,
     dataSource = [],
     hasMore,
     loading,
     variables = {},
+    defaultSort,
     onLoadMore,
     onVariablesChange,
   } = props;
@@ -207,7 +216,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
       }
       onVariablesChange(tempVariables);
     },
-    [columnsFilterResults, onVariablesChange, query, variables, sortValue]
+    [onVariablesChange, query, variables, sortValue, columnSymbolResults]
   );
 
   const newColumns = useMemo(
@@ -226,7 +235,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
               onClick: (tagItem) => {
                 const tempFilters = { ...filters };
                 if (tempFilters.tags) {
-                  if (tempFilters.tags.indexOf(tagItem[0]) < 0) {
+                  if (!tempFilters.tags.includes(tagItem[0])) {
                     tempFilters.tags.push(tagItem[0]);
                   } else {
                     tempFilters.tags = tempFilters.tags.filter(
@@ -255,6 +264,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
   );
 
   useEffect(() => {
+    const sort =
+      defaultSort?.sort && defaultSort?.direction
+        ? `${defaultSort?.sort} ${defaultSort?.direction}`
+        : "";
     handelSubmitFilters(
       routeParams.filter
         ? JSON.parse(decodeURIComponent(routeParams.filter))
@@ -262,7 +275,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
       routeParams.query,
       routeParams.sort && routeParams.direction
         ? `${routeParams.sort} ${routeParams.direction}`
-        : ""
+        : sort
     );
     if (routeParams.query) {
       setQuery(routeParams.query);
@@ -280,6 +293,13 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
     }
     if (routeParams.sort && routeParams.direction) {
       setSortValue(`${routeParams.sort} ${routeParams.direction}`);
+    } else if (defaultSort?.sort && defaultSort?.direction) {
+      setSortValue(`${defaultSort?.sort} ${defaultSort?.direction}`);
+      setRouteParams({
+        ...routeParams,
+        sort: defaultSort?.sort,
+        direction: defaultSort?.direction,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -377,10 +397,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>) {
       </div>
       <div style={{ marginTop: 10 }}>
         {(() => {
-          const tagList: {
+          const tagList: Array<{
             field: string;
             value: string | number | boolean;
-          }[] = [];
+          }> = [];
 
           Object.keys(filters).forEach((field) => {
             filters[field].forEach((value) => {
