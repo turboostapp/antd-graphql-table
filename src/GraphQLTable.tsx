@@ -24,8 +24,11 @@ import { Direction, Ordering } from "./types/BaseTypes";
 import { FilterType } from "./types/FilterType";
 
 const StyledGraphQLTable = styled.div`
-  .ant-pagination-item {
-    display: none;
+  .ant-pagination-item,
+  .ant-pagination-options,
+  .ant-pagination-jump-prev,
+  .ant-pagination-jump-next {
+    display: none !important;
   }
 
   .ant-table-pagination-right {
