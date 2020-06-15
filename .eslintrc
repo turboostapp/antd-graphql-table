@@ -4,8 +4,9 @@
     "jest": true
   },
   "extends": [
-    "standard-with-typescript",
+    "standard",
     "standard-react",
+    "plugin:@typescript-eslint/recommended",
     "plugin:prettier/recommended",
     "prettier/@typescript-eslint",
     "prettier/react",
@@ -20,8 +21,6 @@
     "react-hooks/rules-of-hooks": "error",
     "react/prop-types": "off",
     "simple-import-sort/sort": "error",
-    "@typescript-eslint/strict-boolean-expressions": "off",
-    "@typescript-eslint/no-dynamic-delete": "off",
-    "@typescript-eslint/restrict-template-expressions": "off"
+    "@typescript-eslint/explicit-function-return-type": "off"
   }
 }
