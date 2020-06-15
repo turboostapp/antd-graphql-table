@@ -140,6 +140,24 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     [columns]
   );
 
+  // 将输入框上的属性名都转成对应的 key
+  const finalQuery = useMemo(() => {
+    let resultQuery = query;
+    // 匹配带冒号的，例如结果为 ["日期:","email:"]
+    const titleArr = resultQuery.match(/(\S+):/g);
+    if (titleArr) {
+      titleArr.forEach((item) => {
+        // 用没冒号的去查找
+        const notSymbolItem = item.replace(":", "");
+        const column = columns.find((column) => column.title === notSymbolItem);
+        if (column) {
+          resultQuery = resultQuery.replace(item, `${column.key}:`);
+        }
+      });
+    }
+    return resultQuery;
+  }, [columns, query]);
+
   // 过滤类型为 SelectInput DateRangePicker DateTimeRangePicker 的 dataIndex 数组
   const columnSymbolResults = useMemo(() => {
     const columnsResults = columnsFilterResults.filter(
@@ -200,7 +218,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
       const tempVariables = {
         ...variables,
-        query: `${parameterQuery || query} ${newFilter}`.trim(),
+        query: `${parameterQuery || finalQuery} ${newFilter}`.trim(),
         orderBy: [
           {
             sort: orderByArr[0],
@@ -216,7 +234,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       }
       onVariablesChange(tempVariables);
     },
-    [onVariablesChange, query, variables, sortValue, columnSymbolResults]
+    [finalQuery, onVariablesChange, variables, sortValue, columnSymbolResults]
   );
 
   const newColumns = useMemo(
@@ -278,7 +296,23 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         : sort
     );
     if (routeParams.query) {
-      setQuery(routeParams.query);
+      let resultQuery = routeParams.query;
+      // 获取英文 title 名带冒号数组，例如结果为 ["domain:","tags:"]
+      const titleArr = routeParams.query.match(/(\S+):/g);
+      if (titleArr) {
+        titleArr.forEach((item) => {
+          // 用没冒号的去查找
+          const notSymbolItem = item.replace(":", "");
+          const column = columns.find((column) => column.key === notSymbolItem);
+          if (column) {
+            resultQuery = resultQuery.replace(
+              item,
+              `${column.title as string}:`
+            );
+          }
+        });
+      }
+      setQuery(resultQuery);
     }
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
@@ -326,7 +360,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
           onPressEnter={() => {
             setPage(1);
             handelSubmitFilters(filters);
-            setRouteParams({ ...routeParams, query });
+            setRouteParams({ ...routeParams, query: finalQuery });
           }}
         />
         <Button
