@@ -35,8 +35,11 @@ function dateArrayToQuery(field: string, date: string[]) {
 }
 
 const StyledGraphQLTable = styled.div`
-  .ant-pagination-item {
-    display: none;
+  .ant-pagination-item,
+  .ant-pagination-options,
+  .ant-pagination-jump-prev,
+  .ant-pagination-jump-next {
+    display: none !important;
   }
 
   .ant-table-pagination-right {
