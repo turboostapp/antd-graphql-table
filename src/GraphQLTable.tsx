@@ -24,6 +24,16 @@ import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
 import { Direction, Ordering } from "./types/BaseTypes";
 
+function dateArrayToQuery(field: string, date: string[]) {
+  return `(${field}:>="${moment(date[0])
+    .startOf("d")
+    .toDate()
+    .toISOString()}" ${field}:<="${moment(date[1])
+    .endOf("d")
+    .toDate()
+    .toISOString()}")`;
+}
+
 const StyledGraphQLTable = styled.div`
   .ant-pagination-item {
     display: none;
@@ -141,7 +151,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     [columns]
   );
 
-  // 将输入框上的属性名都转成对应的 dataIndex
+  // 将输入框上的属性名都转成对应的 key
   const finalQuery = useMemo(() => {
     let resultQuery = query;
     // 匹配带冒号的，例如结果为 ["日期:","email:"]
@@ -152,7 +162,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         const notSymbolItem = item.replace(":", "");
         const column = columns.find((column) => column.title === notSymbolItem);
         if (column) {
-          resultQuery = resultQuery.replace(item, `${column.dataIndex}:`);
+          resultQuery = resultQuery.replace(item, `${column.key}:`);
         }
       });
     }
@@ -174,9 +184,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
             if (newValue instanceof Array) {
               newFilter = `${
                 newFilter ? `${newFilter} ` : ""
-              }(${field}:>="${moment(newValue[0]).toISOString(
-                true
-              )}" ${field}:<="${moment(newValue[1]).toISOString(true)}")`;
+              }${dateArrayToQuery(field, newValue)}`;
             } else {
               // 如果是 string 的话，要加上引号
               if (typeof newValue === "string") {
@@ -232,19 +240,19 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
               type: ValueType.TAG,
               onClick: (tagItem) => {
                 const tempFilters = { ...filters };
-                if (tempFilters.tags) {
-                  if (!tempFilters.tags.includes(tagItem[0])) {
-                    tempFilters.tags.push(tagItem[0]);
+                if (tempFilters[column.key]) {
+                  if (!tempFilters[column.key].includes(tagItem[0])) {
+                    tempFilters[column.key].push(tagItem[0]);
                   } else {
-                    tempFilters.tags = tempFilters.tags.filter(
+                    tempFilters[column.key] = tempFilters[column.key].filter(
                       (tempTagList) => tempTagList !== tagItem[0]
                     );
-                    if (tempFilters.tags.length === 0) {
-                      delete tempFilters.tags;
+                    if (tempFilters[column.key].length === 0) {
+                      delete tempFilters[column.key];
                     }
                   }
                 } else {
-                  tempFilters.tags = [tagItem[0]];
+                  tempFilters[column.key] = [tagItem[0]];
                 }
                 setFilters(tempFilters);
                 handelSubmitFilters(tempFilters);
@@ -283,9 +291,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         titleArr.forEach((item) => {
           // 用没冒号的去查找
           const notSymbolItem = item.replace(":", "");
-          const column = columns.find(
-            (column) => column.dataIndex === notSymbolItem
-          );
+          const column = columns.find((column) => column.key === notSymbolItem);
           if (column) {
             resultQuery = resultQuery.replace(
               item,
@@ -301,9 +307,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       // Array 是日期格式，转换成 ISO 格式
       Object.keys(tempFilter).forEach((key) => {
         if (tempFilter[key][0] instanceof Array) {
-          tempFilter[key][0] = tempFilter[key][0].map((item) =>
-            moment(item).toISOString(true)
-          );
+          tempFilter[key][0] = tempFilter[key][0].map((item) => moment(item));
         }
       });
       setFilters(JSON.parse(decodeURIComponent(routeParams.filter)));
@@ -435,7 +439,8 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                 const tempBindValues = { ...bindValues };
                 if (tempBindValues[tag.field] instanceof Array) {
                   delete tempBindValues[tag.field];
-                } else if (tag.field !== "tags") {
+                  // ValueType 是 TAG 的没有 tempBindValues[tag.field]
+                } else if (tempBindValues[tag.field]) {
                   tempBindValues[tag.field] = tempBindValues[tag.field].filter(
                     (item) => item !== tag.value
                   );
@@ -444,7 +449,6 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                   }
                 }
                 setBindValues(tempBindValues);
-                // 处理 tags
                 const tempFilters = { ...filters };
                 // Array 是日期格式
                 if (tempFilters[tag.field] instanceof Array) {
