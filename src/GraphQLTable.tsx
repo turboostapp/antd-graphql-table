@@ -99,10 +99,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
   const [query, setQuery] = useState<string>("");
 
-  // 控件绑定的值，不包含 > <
+  // 筛选控件绑定的值
   const [bindValues, setBindValues] = useState<FilterProps>({});
 
-  // 处理后的筛选，包含 > <
+  // 筛选处理后的值
   const [filters, setFilters] = useState<FilterProps>({});
 
   const [routeParams, setRouteParams] = useRouteParamsState([
@@ -304,13 +304,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     }
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
-      // Array 是日期格式，转换成 ISO 格式
-      Object.keys(tempFilter).forEach((key) => {
-        if (tempFilter[key][0] instanceof Array) {
-          tempFilter[key][0] = tempFilter[key][0].map((item) => moment(item));
-        }
-      });
-      setFilters(JSON.parse(decodeURIComponent(routeParams.filter)));
+      setFilters(tempFilter);
       setBindValues(tempFilter);
     }
     if (routeParams.sort && routeParams.direction) {
