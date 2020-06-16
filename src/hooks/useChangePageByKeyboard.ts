@@ -6,8 +6,14 @@ export default function useChangePageByKeyboard(
   handle: (nextPage: number) => Promise<void>
 ) {
   useEffect(() => {
-    keyboard.bind("ctrl + left", () => handle(page - 1));
-    keyboard.bind("ctrl + right", () => handle(page + 1));
-    return () => keyboard.unbind(["ctrl + left", "ctrl + right"]);
+    keyboard.bind(["command + left", "ctrl + left"], () => handle(page - 1));
+    keyboard.bind(["command + right", "ctrl + right"], () => handle(page + 1));
+    return () =>
+      keyboard.unbind([
+        "command + left",
+        "ctrl + left",
+        "command + right",
+        "ctrl + right",
+      ]);
   }, [handle, page]);
 }
