@@ -186,7 +186,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                 newFilter ? `${newFilter} ` : ""
               }${dateArrayToQuery(field, newValue)}`;
             } else {
-              // 如果是 string 的话，要加上引号
+              // 如果是 string 的话，要加引号
               if (typeof newValue === "string") {
                 newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)
                   ? newValue
