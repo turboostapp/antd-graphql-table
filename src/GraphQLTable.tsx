@@ -1,4 +1,4 @@
-import { Button, Input, Popover, Radio, Tag } from "antd";
+import { Button, Input, Popover, Radio } from "antd";
 import {
   SimpleTable,
   SimpleTableProps,
@@ -7,6 +7,7 @@ import {
 } from "antd-simple-table";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import omit from "lodash/omit";
+import moment from "moment";
 import React, {
   ReactElement,
   useCallback,
@@ -17,11 +18,21 @@ import React, {
 import styled from "styled-components";
 
 import FilterDrawer from "./components/FilterDrawer";
+import Tag from "./components/Tag";
 import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
 import { Direction, Ordering } from "./types/BaseTypes";
-import { FilterType } from "./types/FilterType";
+
+function dateArrayToQuery(field: string, date: string[]) {
+  return `(${field}:>="${moment(date[0])
+    .startOf("d")
+    .toDate()
+    .toISOString()}" ${field}:<="${moment(date[1])
+    .endOf("d")
+    .toDate()
+    .toISOString()}")`;
+}
 
 const StyledGraphQLTable = styled.div`
   .ant-pagination-item,
@@ -57,6 +68,10 @@ export interface Variables {
   orderBy?: Ordering[];
 }
 
+export interface FilterProps {
+  [key: string]: (CheckboxValueType | [string, string])[];
+}
+
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   dataSource: T[];
   columns: Array<GraphQLTableColumnType<T>>;
@@ -87,15 +102,11 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
   const [query, setQuery] = useState<string>("");
 
-  // 控件绑定的值，不包含 > <
-  const [bindValues, setBindValues] = useState<{
-    [key: string]: CheckboxValueType[];
-  }>({});
+  // 筛选控件绑定的值
+  const [bindValues, setBindValues] = useState<FilterProps>({});
 
-  // 处理后的筛选，包含 > <
-  const [filters, setFilters] = useState<{
-    [key: string]: CheckboxValueType[];
-  }>({});
+  // 筛选处理后的值
+  const [filters, setFilters] = useState<FilterProps>({});
 
   const [routeParams, setRouteParams] = useRouteParamsState([
     "query",
@@ -143,26 +154,27 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     [columns]
   );
 
-  // 过滤类型为 SelectInput DateRangePicker DateTimeRangePicker 的 dataIndex 数组
-  const columnSymbolResults = useMemo(() => {
-    const columnsResults = columnsFilterResults.filter(
-      (item) =>
-        item.filterType === FilterType.SelectInput ||
-        item.filterType === FilterType.DateRangePicker ||
-        item.filterType === FilterType.DateTimeRangePicker
-    );
-    const array = [];
-    columnsResults.forEach((item) => {
-      array.push(item.dataIndex);
-    });
-    return array;
-  }, [columnsFilterResults]);
+  // 将输入框上的属性名都转成对应的 key
+  const finalQuery = useMemo(() => {
+    let resultQuery = query;
+    // 匹配带冒号的，例如结果为 ["日期:","email:"]
+    const titleArr = resultQuery.match(/(\S+):/g);
+    if (titleArr) {
+      titleArr.forEach((item) => {
+        // 用没冒号的去查找
+        const notSymbolItem = item.replace(":", "");
+        const column = columns.find((column) => column.title === notSymbolItem);
+        if (column) {
+          resultQuery = resultQuery.replace(item, `${column.key}:`);
+        }
+      });
+    }
+    return resultQuery;
+  }, [columns, query]);
 
   const handelSubmitFilters = useCallback(
     (
-      parameterFilters: {
-        [key: string]: CheckboxValueType[];
-      },
+      parameterFilters: FilterProps,
       parameterQuery?: string,
       parameterOrderBy?: string
     ) => {
@@ -171,28 +183,22 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         if (values && values[0] !== "") {
           values.forEach((value) => {
             let newValue = value;
-            if (typeof newValue === "string") {
-              if (columnSymbolResults.includes(field)) {
-                if (!/(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)) {
-                  if (/^[<>]/.test(newValue)) {
-                    newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(
-                      newValue.slice(1)
-                    )
-                      ? newValue
-                      : `${newValue.slice(0, 1)}"${newValue.slice(1)}"`;
-                  } else {
-                    newValue = `"${newValue}"`;
-                  }
-                }
-              } else {
+            // Array 是日期格式，转换成 ISO 格式
+            if (newValue instanceof Array) {
+              newFilter = `${
+                newFilter ? `${newFilter} ` : ""
+              }${dateArrayToQuery(field, newValue)}`;
+            } else {
+              // 如果是 string 的话，要加引号
+              if (typeof newValue === "string") {
                 newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)
                   ? newValue
                   : `"${newValue}"`;
               }
+              newFilter = `${
+                newFilter ? `${newFilter} ` : ""
+              }${field}:${newValue}`;
             }
-            newFilter = `${
-              newFilter ? `${newFilter} ` : ""
-            }${field}:${newValue}`;
           });
         }
       });
@@ -203,7 +209,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
       const tempVariables = {
         ...variables,
-        query: `${parameterQuery || query} ${newFilter}`.trim(),
+        query: `${parameterQuery || finalQuery} ${newFilter}`.trim(),
         orderBy: [
           {
             sort: orderByArr[0],
@@ -219,7 +225,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       }
       onVariablesChange(tempVariables);
     },
-    [onVariablesChange, query, variables, sortValue, columnSymbolResults]
+    [finalQuery, onVariablesChange, variables, sortValue]
   );
 
   const newColumns = useMemo(
@@ -237,19 +243,19 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
               type: ValueType.TAG,
               onClick: (tagItem) => {
                 const tempFilters = { ...filters };
-                if (tempFilters.tags) {
-                  if (!tempFilters.tags.includes(tagItem[0])) {
-                    tempFilters.tags.push(tagItem[0]);
+                if (tempFilters[column.key]) {
+                  if (!tempFilters[column.key].includes(tagItem[0])) {
+                    tempFilters[column.key].push(tagItem[0]);
                   } else {
-                    tempFilters.tags = tempFilters.tags.filter(
+                    tempFilters[column.key] = tempFilters[column.key].filter(
                       (tempTagList) => tempTagList !== tagItem[0]
                     );
-                    if (tempFilters.tags.length === 0) {
-                      delete tempFilters.tags;
+                    if (tempFilters[column.key].length === 0) {
+                      delete tempFilters[column.key];
                     }
                   }
                 } else {
-                  tempFilters.tags = [tagItem[0]];
+                  tempFilters[column.key] = [tagItem[0]];
                 }
                 setFilters(tempFilters);
                 handelSubmitFilters(tempFilters);
@@ -281,17 +287,27 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         : sort
     );
     if (routeParams.query) {
-      setQuery(routeParams.query);
+      let resultQuery = routeParams.query;
+      // 获取英文 title 名带冒号数组，例如结果为 ["domain:","tags:"]
+      const titleArr = routeParams.query.match(/(\S+):/g);
+      if (titleArr) {
+        titleArr.forEach((item) => {
+          // 用没冒号的去查找
+          const notSymbolItem = item.replace(":", "");
+          const column = columns.find((column) => column.key === notSymbolItem);
+          if (column) {
+            resultQuery = resultQuery.replace(
+              item,
+              `${column.title as string}:`
+            );
+          }
+        });
+      }
+      setQuery(resultQuery);
     }
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
-      // 判断 url 中的 filter 是否有 selectInput DateRangePicker DateTimeRangePicker 类型，且包含 > < 符号的，需拆开
-      Object.keys(tempFilter).forEach((key) => {
-        if (columnSymbolResults.includes(key)) {
-          tempFilter[key][0] = tempFilter[key][0].replace(/[>|<]/, "");
-        }
-      });
-      setFilters(JSON.parse(decodeURIComponent(routeParams.filter)));
+      setFilters(tempFilter);
       setBindValues(tempFilter);
     }
     if (routeParams.sort && routeParams.direction) {
@@ -312,7 +328,6 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       <FilterDrawer
         bindValues={bindValues}
         columns={columnsFilterResults}
-        columnSymbolResults={columnSymbolResults}
         filters={filters}
         routeParams={routeParams}
         visible={drawerVisible}
@@ -329,7 +344,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
           onPressEnter={() => {
             setPage(1);
             handelSubmitFilters(filters);
-            setRouteParams({ ...routeParams, query });
+            setRouteParams({ ...routeParams, query: finalQuery });
           }}
         />
         <Button
@@ -407,26 +422,22 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
           Object.keys(filters).forEach((field) => {
             filters[field].forEach((value) => {
-              tagList.push({ field, value });
+              if (value instanceof Array) {
+                tagList.push({ field, value: `${value[0]} 到 ${value[1]}` });
+              } else {
+                tagList.push({ field, value });
+              }
             });
           });
           return tagList.map((tag) => (
             <Tag
-              closable
               key={`${tag.field}:${tag.value}`}
               onClose={() => {
-                // 处理filters,例如此时标签的值为 >123,但输入框里需显示为123，要做特殊处理
                 const tempBindValues = { ...bindValues };
-                const result = columnsFilterResults.find(
-                  (item) => item.dataIndex === tag.field
-                );
-                if (
-                  result?.filterType === FilterType.SelectInput ||
-                  result?.filterType === FilterType.DateRangePicker ||
-                  result?.filterType === FilterType.DateTimeRangePicker
-                ) {
+                if (tempBindValues[tag.field] instanceof Array) {
                   delete tempBindValues[tag.field];
-                } else if (tag.field !== "tags") {
+                  // ValueType 是 TAG 的没有 tempBindValues[tag.field]
+                } else if (tempBindValues[tag.field]) {
                   tempBindValues[tag.field] = tempBindValues[tag.field].filter(
                     (item) => item !== tag.value
                   );
@@ -435,13 +446,17 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                   }
                 }
                 setBindValues(tempBindValues);
-                // 处理 tags
                 const tempFilters = { ...filters };
-                tempFilters[tag.field] = tempFilters[tag.field].filter(
-                  (item) => item !== tag.value
-                );
-                if (tempFilters[tag.field].length === 0) {
+                // Array 是日期格式
+                if (tempFilters[tag.field] instanceof Array) {
                   delete tempFilters[tag.field];
+                } else {
+                  tempFilters[tag.field] = tempFilters[tag.field].filter(
+                    (item) => item !== tag.value
+                  );
+                  if (tempFilters[tag.field].length === 0) {
+                    delete tempFilters[tag.field];
+                  }
                 }
                 setRouteParams({
                   ...routeParams,
@@ -451,7 +466,9 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                 handelSubmitFilters(tempFilters);
               }}
             >
-              {tag.field}:{String(tag.value)}
+              {columns.find((column) => column.key === tag.field).title ||
+                tag.field}
+              :{String(tag.value)}
             </Tag>
           ));
         })()}

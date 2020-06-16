@@ -1,22 +1,15 @@
-import {
-  Button,
-  Checkbox,
-  Collapse,
-  DatePicker,
-  Drawer,
-  Input,
-  Select,
-} from "antd";
-import { FilterType } from "../types/FilterType";
-import { CheckboxValueType } from "antd/lib/checkbox/Group";
-import React, { useEffect, useState } from "react";
-import styled from "styled-components";
-import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType";
+import { Button, Checkbox, Collapse, DatePicker, Drawer, Input } from "antd";
 import moment from "moment";
+import React from "react";
+import styled from "styled-components";
+
+import { FilterProps } from "../GraphQLTable";
+import { GraphQLTableColumnType } from "../interfaces/GraphQLTableColumnType";
+import { FilterType } from "../types/FilterType";
 import getDataIndex from "../utils/getDataIndex";
 
 const { Panel } = Collapse;
-const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 const StyledDrawer = styled(Drawer)`
   .ant-drawer-body {
@@ -48,13 +41,8 @@ const StyledButton = styled(Button)`
   padding: 4px 0;
 `;
 
-export interface FilterProps {
-  [key: string]: CheckboxValueType[];
-}
-
 interface FilterDrawerProps<T> {
   columns: GraphQLTableColumnType<T>[];
-  columnSymbolResults: string[];
   visible: boolean;
   filters: FilterProps;
   bindValues: FilterProps;
@@ -70,7 +58,6 @@ interface FilterDrawerProps<T> {
 
 export default function FilterDrawer<T extends {}>({
   columns,
-  columnSymbolResults,
   visible,
   filters,
   bindValues,
@@ -81,25 +68,6 @@ export default function FilterDrawer<T extends {}>({
   onClose,
   onRouteParamsChange,
 }: FilterDrawerProps<T>) {
-  const [selectValues, setSelectValues] = useState({});
-  useEffect(() => {
-    if (routeParams.filter) {
-      const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
-
-      // 判断 url 中的 filter 是否有 selectInput DateRangePicker DateTimeRangePicker 类型，且包含 > < 符号的，需拆开
-      const tempSelectValues = {};
-      Object.keys(tempFilter).forEach((key) => {
-        if (columnSymbolResults.includes(key)) {
-          const firstString = tempFilter[key][0].slice(0, 1);
-          if (firstString === "<" || firstString === ">") {
-            tempSelectValues[key] = firstString;
-          }
-        }
-      });
-      setSelectValues(tempSelectValues);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
   return (
     <StyledDrawer
       closable
@@ -181,169 +149,37 @@ export default function FilterDrawer<T extends {}>({
                   </StyledButton>
                 </>
               )}
-              {columnsFilterResult.filterType === FilterType.SelectInput && (
-                <>
-                  <Input.Group compact>
-                    <Select
-                      defaultValue="="
-                      style={{ width: "20%" }}
-                      value={selectValues[columnIndex]}
-                      onChange={(value) => {
-                        const tempSelectValues = { ...selectValues };
-                        const tempFilters = { ...filters };
-                        tempSelectValues[columnIndex] = value;
-                        setSelectValues(tempSelectValues);
-                        // 如果右边输入框有值，改变符号也会触发
-                        if (tempFilters[columnIndex]) {
-                          tempFilters[columnIndex] = [
-                            (value === "=" ? "" : value) +
-                              bindValues[columnIndex][0],
-                          ];
-                          onFiltersChange(tempFilters);
-                          onSubmit(tempFilters);
-                          onRouteParamsChange({
-                            ...routeParams,
-                            filter: encodeURIComponent(
-                              JSON.stringify(tempFilters)
-                            ),
-                          });
-                        }
-                      }}
-                    >
-                      <Option value="=">=</Option>
-                      <Option value=">">&gt;</Option>
-                      <Option value="<">&lt;</Option>
-                    </Select>
-                    <Input
-                      style={{ width: "80%" }}
-                      value={`${
-                        bindValues[columnIndex]
-                          ? bindValues[columnIndex][0]
-                          : ""
-                      }`}
-                      onChange={(event) => {
-                        const tempBindValues = { ...bindValues };
-                        const value = event.target.value.replace(
-                          /[^(\d|.|\-|:|\s)]/g,
-                          ""
-                        );
-                        if (value) {
-                          tempBindValues[columnIndex] = [value];
-                        } else {
-                          delete tempBindValues[columnIndex];
-                        }
-                        onBindValuesChange(tempBindValues);
-                      }}
-                      onPressEnter={(event) => {
-                        // tag 加上符号,若是 = 符号不显示
-                        const tempFilters = { ...filters };
-                        const tempSelectValues = { ...selectValues };
-                        tempFilters[columnIndex] = [
-                          (selectValues[columnIndex] === "=" ||
-                          !selectValues[columnIndex]
-                            ? ""
-                            : selectValues[columnIndex]) +
-                            (event.target as HTMLInputElement).value,
-                        ];
-                        if ((event.target as HTMLInputElement).value === "") {
-                          delete tempFilters[columnIndex];
-                        }
-                        setSelectValues(tempSelectValues);
-                        onFiltersChange(tempFilters);
-                        onSubmit(tempFilters);
-                        onRouteParamsChange({
-                          ...routeParams,
-                          filter: encodeURIComponent(
-                            JSON.stringify(tempFilters)
-                          ),
-                        });
-                      }}
-                    />
-                  </Input.Group>
-                  <StyledButton
-                    type="link"
-                    onClick={() => {
-                      const tempBindValues = { ...bindValues };
-                      const tempFilters = { ...filters };
-                      delete tempBindValues[columnIndex];
-                      delete tempFilters[columnIndex];
-                      onBindValuesChange(tempBindValues);
-                      onFiltersChange(tempFilters);
-                      onRouteParamsChange({
-                        ...routeParams,
-                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
-                      });
-                      onSubmit(tempFilters);
-                    }}
-                  >
-                    清除
-                  </StyledButton>
-                </>
-              )}
               {(columnsFilterResult.filterType === FilterType.DateRangePicker ||
                 columnsFilterResult.filterType ===
                   FilterType.DateTimeRangePicker) && (
                 <>
                   <Input.Group compact>
-                    <Select
-                      defaultValue="="
-                      style={{ width: "20%" }}
-                      value={selectValues[columnIndex]}
-                      onChange={(value) => {
-                        const tempSelectValues = { ...selectValues };
-                        const tempFilters = { ...filters };
-                        tempSelectValues[columnIndex] = value;
-                        setSelectValues(tempSelectValues);
-                        // 如果右边输入框有值，改变符号也会触发
-                        if (tempFilters[columnIndex]) {
-                          tempFilters[columnIndex] = [
-                            (value === "=" ? "" : value) +
-                              bindValues[columnIndex][0],
-                          ];
-                          onFiltersChange(tempFilters);
-                          onSubmit(tempFilters);
-                          onRouteParamsChange({
-                            ...routeParams,
-                            filter: encodeURIComponent(
-                              JSON.stringify(tempFilters)
-                            ),
-                          });
-                        }
-                      }}
-                    >
-                      <Option value="=">=</Option>
-                      <Option value=">">&gt;</Option>
-                      <Option value="<">&lt;</Option>
-                    </Select>
-                    <DatePicker
+                    <RangePicker
                       showTime={
-                        columnsFilterResult.filterType ===
+                        columnsFilterResult.filterType !==
                         FilterType.DateRangePicker
-                          ? false
-                          : true
                       }
                       style={{ width: "80%" }}
                       value={
                         bindValues[columnIndex]
-                          ? moment(bindValues[columnIndex][0] as string)
+                          ? [
+                              moment(bindValues[columnIndex][0][0]),
+                              moment(bindValues[columnIndex][0][1]),
+                            ]
                           : null
                       }
-                      onChange={(date, dateString) => {
+                      onChange={(dates, dateStrings) => {
                         const tempBindValues = { ...bindValues };
                         const tempFilters = { ...filters };
-                        tempBindValues[columnIndex] = [dateString];
-                        tempFilters[columnIndex] = [
-                          (selectValues[columnIndex] === "=" ||
-                          !selectValues[columnIndex]
-                            ? ""
-                            : selectValues[columnIndex]) + dateString,
-                        ];
-                        if (!date) {
+                        tempBindValues[columnIndex] = [dateStrings];
+                        onBindValuesChange(tempBindValues);
+                        if (dates) {
+                          tempFilters[columnIndex] = [dateStrings];
+                        } else {
                           delete tempBindValues[columnIndex];
                           delete tempFilters[columnIndex];
                         }
                         onFiltersChange(tempFilters);
-                        onBindValuesChange(tempBindValues);
                         onSubmit(tempFilters);
                         onRouteParamsChange({
                           ...routeParams,
@@ -378,7 +214,9 @@ export default function FilterDrawer<T extends {}>({
                 <>
                   <Checkbox.Group
                     style={{ display: "block" }}
-                    value={bindValues[columnIndex]}
+                    value={
+                      bindValues[columnIndex] as (string | number | boolean)[]
+                    }
                     onChange={(value) => {
                       const tempBindValues = { ...bindValues };
                       const tempFilters = { ...filters };
