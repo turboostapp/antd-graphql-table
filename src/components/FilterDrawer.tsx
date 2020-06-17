@@ -1,6 +1,6 @@
 import { Button, Checkbox, Collapse, DatePicker, Drawer, Input } from "antd";
 import moment from "moment";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import styled from "styled-components";
 
 import { FilterProps } from "../GraphQLTable";
@@ -68,6 +68,33 @@ export default function FilterDrawer<T extends {}>({
   onClose,
   onRouteParamsChange,
 }: FilterDrawerProps<T>) {
+  const timer = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(timer.current);
+    };
+  }, []);
+
+  // Input 防抖
+  const debounceFilterTypeInput = (value, columnIndex) => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      const tempFilters = { ...filters };
+      tempFilters[columnIndex] = [value];
+      if (value === "") {
+        delete tempFilters[columnIndex];
+      }
+      onRouteParamsChange({
+        ...routeParams,
+        filter: encodeURIComponent(JSON.stringify(tempFilters)),
+      });
+      onFiltersChange(tempFilters);
+      onSubmit(tempFilters);
+      timer.current = null;
+    }, 1000);
+  };
+
   return (
     <StyledDrawer
       closable
@@ -112,21 +139,26 @@ export default function FilterDrawer<T extends {}>({
                         delete tempBindValues[columnIndex];
                       }
                       onBindValuesChange(tempBindValues);
+                      debounceFilterTypeInput(event.target.value, columnIndex);
                     }}
-                    onPressEnter={(event) => {
-                      const tempFilters = { ...filters };
-                      tempFilters[columnIndex] = [
-                        (event.target as HTMLInputElement).value,
-                      ];
-                      if ((event.target as HTMLInputElement).value === "") {
-                        delete tempFilters[columnIndex];
+                    onBlur={(event) => {
+                      // 如果计时器还在跑的时候失去焦点，清除计时器，直接执行
+                      if (timer.current) {
+                        clearTimeout(timer.current);
+                        const tempFilters = { ...filters };
+                        tempFilters[columnIndex] = [event.target.value];
+                        if (event.target.value === "") {
+                          delete tempFilters[columnIndex];
+                        }
+                        onRouteParamsChange({
+                          ...routeParams,
+                          filter: encodeURIComponent(
+                            JSON.stringify(tempFilters)
+                          ),
+                        });
+                        onFiltersChange(tempFilters);
+                        onSubmit(tempFilters);
                       }
-                      onRouteParamsChange({
-                        ...routeParams,
-                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
-                      });
-                      onFiltersChange(tempFilters);
-                      onSubmit(tempFilters);
                     }}
                   />
                   <StyledButton
