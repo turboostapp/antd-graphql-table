@@ -1,7 +1,6 @@
 import { pick } from "lodash";
 import qs from "qs";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
-import { useHistory } from "react-router-dom";
 
 import { useQuery } from "./useReactRouterQuery";
 
@@ -16,12 +15,13 @@ export default function useRouteParamsState(
   >
 ] {
   const query = useQuery();
-  const history = useHistory();
   const [state, setState] = useState<{
     [key: string]: string;
-  }>(pick(query, options) as {
-    [key: string]: string;
-  });
+  }>(
+    pick(query, options) as {
+      [key: string]: string;
+    }
+  );
 
   return [
     state,
@@ -34,11 +34,13 @@ export default function useRouteParamsState(
               delete tempNewState[key];
             }
           });
-          history.push(
+          history.pushState(
+            {},
+            "",
             `${window.location.pathname}?${qs.stringify(tempNewState)}`
           );
         } else {
-          history.push(window.location.pathname);
+          history.pushState({}, "", window.location.pathname);
         }
         return setState(newState);
       },
