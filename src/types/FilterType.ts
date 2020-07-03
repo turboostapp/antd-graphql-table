@@ -1,5 +1,7 @@
 export enum FilterType {
-  Input = "input",
-  DateRangePicker = "dateRangePicker",
-  DateTimeRangePicker = "dateTimeRangePicker",
+  CHECKBOX = "CHECKBOX",
+  RADIO = "RADIO",
+  INPUT = "INPUT",
+  DATE_RANGE_PICKER = "DATE_RANGE_PICKER",
+  DATE_TIME_RANGE_PICKER = "DATE_TIME_RANGE_PICKER",
 }

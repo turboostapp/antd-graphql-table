@@ -434,7 +434,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
               key={`${tag.field}:${tag.value}`}
               onClose={() => {
                 const tempBindValues = { ...bindValues };
-                if (tempBindValues[tag.field] instanceof Array) {
+                if (tempBindValues[tag.field][0] instanceof Array) {
                   delete tempBindValues[tag.field];
                   // ValueType 是 TAG 的没有 tempBindValues[tag.field]
                 } else if (tempBindValues[tag.field]) {
@@ -448,7 +448,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                 setBindValues(tempBindValues);
                 const tempFilters = { ...filters };
                 // Array 是日期格式
-                if (tempFilters[tag.field] instanceof Array) {
+                if (tempFilters[tag.field][0] instanceof Array) {
                   delete tempFilters[tag.field];
                 } else {
                   tempFilters[tag.field] = tempFilters[tag.field].filter(
