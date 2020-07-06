@@ -466,8 +466,16 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                 handelSubmitFilters(tempFilters);
               }}
             >
-              {columns.find((column) => column.key === tag.field).title ||
-                tag.field}
+              {columns.find(
+                (column) =>
+                  // 如果 dataIndex 是数组，用 JSON.stringify 判断两个数组是否相等
+                  JSON.stringify(column.dataIndex) ===
+                  JSON.stringify(
+                    column.dataIndex instanceof Array
+                      ? tag.field.split(".")
+                      : tag.field
+                  )
+              ).title || tag.field}
               :{String(tag.value)}
             </Tag>
           ));
