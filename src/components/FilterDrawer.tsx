@@ -1,6 +1,14 @@
-import { Button, Checkbox, Collapse, DatePicker, Drawer, Input } from "antd";
+import {
+  Button,
+  Checkbox,
+  Collapse,
+  DatePicker,
+  Drawer,
+  Input,
+  Radio,
+} from "antd";
 import moment from "moment";
-import React, { useEffect, useRef } from "react";
+import React, { ReactElement, useEffect, useRef } from "react";
 import styled from "styled-components";
 
 import { FilterProps } from "../GraphQLTable";
@@ -37,6 +45,12 @@ const StyledCheckbox = styled(Checkbox)`
   margin: 0 !important;
 `;
 
+const StyledRadio = styled(Radio)`
+  display: block;
+
+  height: 30px;
+`;
+
 const StyledButton = styled(Button)`
   padding: 4px 0;
 `;
@@ -56,7 +70,7 @@ interface FilterDrawerProps<T> {
   onClose: () => void;
 }
 
-export default function FilterDrawer<T extends {}>({
+export default function FilterDrawer<T>({
   columns,
   visible,
   filters,
@@ -67,7 +81,7 @@ export default function FilterDrawer<T extends {}>({
   onSubmit,
   onClose,
   onRouteParamsChange,
-}: FilterDrawerProps<T>) {
+}: FilterDrawerProps<T>): ReactElement {
   const timer = useRef(null);
 
   useEffect(() => {
@@ -119,12 +133,32 @@ export default function FilterDrawer<T extends {}>({
       <Collapse expandIconPosition="right">
         {columns.map((columnsFilterResult) => {
           const columnIndex = getDataIndex(columnsFilterResult.dataIndex);
+          const ClearButton = (
+            <StyledButton
+              type="link"
+              onClick={() => {
+                const tempBindValues = { ...bindValues };
+                const tempFilters = { ...filters };
+                delete tempBindValues[columnIndex];
+                delete tempFilters[columnIndex];
+                onBindValuesChange(tempBindValues);
+                onFiltersChange(tempFilters);
+                onSubmit(tempFilters);
+                onRouteParamsChange({
+                  ...routeParams,
+                  filter: encodeURIComponent(JSON.stringify(tempFilters)),
+                });
+              }}
+            >
+              清除
+            </StyledButton>
+          );
           return (
             <Panel
               header={columnsFilterResult.title}
               key={columnsFilterResult.key}
             >
-              {columnsFilterResult.filterType === FilterType.Input && (
+              {columnsFilterResult.filterType === FilterType.INPUT && (
                 <>
                   <Input
                     value={
@@ -161,35 +195,19 @@ export default function FilterDrawer<T extends {}>({
                       }
                     }}
                   />
-                  <StyledButton
-                    type="link"
-                    onClick={() => {
-                      const tempBindValues = { ...bindValues };
-                      const tempFilters = { ...filters };
-                      delete tempBindValues[columnIndex];
-                      delete tempFilters[columnIndex];
-                      onBindValuesChange(tempBindValues);
-                      onFiltersChange(tempFilters);
-                      onSubmit(tempFilters);
-                      onRouteParamsChange({
-                        ...routeParams,
-                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
-                      });
-                    }}
-                  >
-                    清除
-                  </StyledButton>
+                  {ClearButton}
                 </>
               )}
-              {(columnsFilterResult.filterType === FilterType.DateRangePicker ||
+              {(columnsFilterResult.filterType ===
+                FilterType.DATE_RANGE_PICKER ||
                 columnsFilterResult.filterType ===
-                  FilterType.DateTimeRangePicker) && (
+                  FilterType.DATE_TIME_RANGE_PICKER) && (
                 <>
                   <Input.Group compact>
                     <RangePicker
                       showTime={
                         columnsFilterResult.filterType !==
-                        FilterType.DateRangePicker
+                        FilterType.DATE_RANGE_PICKER
                       }
                       style={{ width: "80%" }}
                       value={
@@ -222,81 +240,88 @@ export default function FilterDrawer<T extends {}>({
                       }}
                     />
                   </Input.Group>
-                  <StyledButton
-                    type="link"
-                    onClick={() => {
-                      const tempBindValues = { ...bindValues };
-                      const tempFilters = { ...filters };
-                      delete tempBindValues[columnIndex];
-                      delete tempFilters[columnIndex];
-                      onBindValuesChange(tempBindValues);
-                      onFiltersChange(tempFilters);
-                      onRouteParamsChange({
-                        ...routeParams,
-                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
-                      });
-                      onSubmit(tempFilters);
-                    }}
-                  >
-                    清除
-                  </StyledButton>
+                  {ClearButton}
                 </>
               )}
-              {columnsFilterResult.filters && (
-                <>
-                  <Checkbox.Group
-                    style={{ display: "block" }}
-                    value={
-                      bindValues[columnIndex] as (string | number | boolean)[]
-                    }
-                    onChange={(value) => {
-                      const tempBindValues = { ...bindValues };
-                      const tempFilters = { ...filters };
-                      if (value.length === 0) {
-                        delete tempBindValues[columnIndex];
-                        delete tempFilters[columnIndex];
-                      } else {
-                        tempBindValues[columnIndex] = value;
-                        tempFilters[columnIndex] = value;
+              {columnsFilterResult.filterType === FilterType.CHECKBOX &&
+                columnsFilterResult.filters && (
+                  <>
+                    <Checkbox.Group
+                      style={{ display: "block" }}
+                      value={
+                        bindValues[columnIndex] as (string | number | boolean)[]
                       }
-                      onBindValuesChange(tempBindValues);
-                      onFiltersChange(tempFilters);
-                      onSubmit(tempFilters);
-                      onRouteParamsChange({
-                        ...routeParams,
-                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
-                      });
-                    }}
-                  >
-                    {columnsFilterResult.filters.map((filter) => (
-                      <StyledCheckbox
-                        key={String(filter.value)}
-                        value={filter.value}
-                      >
-                        {filter.text}
-                      </StyledCheckbox>
-                    ))}
-                  </Checkbox.Group>
-                  <StyledButton
-                    type="link"
-                    onClick={() => {
-                      const tempBindValues = { ...bindValues };
-                      const tempFilters = { ...filters };
-                      delete tempBindValues[columnIndex];
-                      delete tempFilters[columnIndex];
-                      onBindValuesChange(tempBindValues);
-                      onFiltersChange(tempFilters);
-                      onSubmit(tempFilters);
-                      onRouteParamsChange({
-                        ...routeParams,
-                        filter: encodeURIComponent(JSON.stringify(tempFilters)),
-                      });
-                    }}
-                  >
-                    清除
-                  </StyledButton>
-                </>
-              )}
+                      onChange={(value) => {
+                        const tempBindValues = { ...bindValues };
+                        const tempFilters = { ...filters };
+                        if (value.length === 0) {
+                          delete tempBindValues[columnIndex];
+                          delete tempFilters[columnIndex];
+                        } else {
+                          tempBindValues[columnIndex] = value;
+                          tempFilters[columnIndex] = value;
+                        }
+                        onBindValuesChange(tempBindValues);
+                        onFiltersChange(tempFilters);
+                        onSubmit(tempFilters);
+                        onRouteParamsChange({
+                          ...routeParams,
+                          filter: encodeURIComponent(
+                            JSON.stringify(tempFilters)
+                          ),
+                        });
+                      }}
+                    >
+                      {columnsFilterResult.filters.map((filter) => (
+                        <StyledCheckbox
+                          key={String(filter.value)}
+                          value={filter.value}
+                        >
+                          {filter.text}
+                        </StyledCheckbox>
+                      ))}
+                    </Checkbox.Group>
+                    {ClearButton}
+                  </>
+                )}
+              {columnsFilterResult.filterType === FilterType.RADIO &&
+                columnsFilterResult.filters && (
+                  <>
+                    <Radio.Group
+                      style={{ display: "block" }}
+                      value={
+                        bindValues[columnIndex]
+                          ? bindValues[columnIndex][0]
+                          : undefined
+                      }
+                      onChange={(e) => {
+                        const tempBindValues = { ...bindValues };
+                        const tempFilters = { ...filters };
+                        tempBindValues[columnIndex] = [e.target.value];
+                        tempFilters[columnIndex] = [e.target.value];
+                        onBindValuesChange(tempBindValues);
+                        onFiltersChange(tempFilters);
+                        onSubmit(tempFilters);
+                        onRouteParamsChange({
+                          ...routeParams,
+                          filter: encodeURIComponent(
+                            JSON.stringify(tempFilters)
+                          ),
+                        });
+                      }}
+                    >
+                      {columnsFilterResult.filters.map((filter) => (
+                        <StyledRadio
+                          key={String(filter.value)}
+                          value={filter.value}
+                        >
+                          {filter.text}
+                        </StyledRadio>
+                      ))}
+                    </Radio.Group>
+                    {ClearButton}
+                  </>
+                )}
             </Panel>
           );
         })}
