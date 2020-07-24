@@ -76,7 +76,7 @@ export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   dataSource: T[];
   columns: Array<GraphQLTableColumnType<T>>;
   hasMore: boolean;
-  variables: Variables;
+  variables?: Variables;
   defaultSort?: Ordering;
   onLoadMore?: () => void | Promise<void>;
   onVariablesChange: (variables: Variables) => void;
