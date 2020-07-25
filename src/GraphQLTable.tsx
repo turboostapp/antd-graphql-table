@@ -22,7 +22,7 @@ import Tag from "./components/Tag";
 import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
-import { Direction, Ordering } from "./types/BaseTypes";
+import { Direction, Maybe, Ordering } from "./types/BaseTypes";
 
 function dateArrayToQuery(field: string, date: string[]) {
   return `(${field}:>="${moment(date[0])
@@ -64,8 +64,9 @@ const StyledButton = styled(Button)`
 `;
 
 export interface Variables {
-  query?: string;
-  orderBy?: Ordering[];
+  after?: string | null | undefined;
+  query?: string | null | undefined;
+  orderBy?: Maybe<Ordering>[] | null | undefined;
 }
 
 export interface FilterProps {
