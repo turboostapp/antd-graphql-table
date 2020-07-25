@@ -20,7 +20,6 @@ stories.add("base", () => (
     <GraphQLTable
       id="as"
       hasMore={false}
-      variables={undefined}
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       onVariablesChange={() => {}}
       columns={[
