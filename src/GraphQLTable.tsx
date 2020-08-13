@@ -390,19 +390,21 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                     )
                 )}
               </Radio.Group>
-              <StyledButton
-                type="link"
-                onClick={() => {
-                  setSortValue("");
-                  if (sortValue !== "") {
-                    setPage(1);
-                  }
-                  handelSubmitFilters(filters, undefined, "");
-                  setRouteParams({ ...routeParams, sort: "", direction: "" });
-                }}
-              >
-                清除
-              </StyledButton>
+              {columnsSortResults.length > 0 && (
+                <StyledButton
+                  type="link"
+                  onClick={() => {
+                    setSortValue("");
+                    if (sortValue !== "") {
+                      setPage(1);
+                    }
+                    handelSubmitFilters(filters, undefined, "");
+                    setRouteParams({ ...routeParams, sort: "", direction: "" });
+                  }}
+                >
+                  清除
+                </StyledButton>
+              )}
             </>
           }
           placement="bottomLeft"
