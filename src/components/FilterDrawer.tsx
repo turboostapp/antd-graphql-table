@@ -113,16 +113,18 @@ export default function FilterDrawer<T>({
     <StyledDrawer
       closable
       footer={
-        <Button
-          onClick={() => {
-            onBindValuesChange({});
-            onFiltersChange({});
-            onSubmit({});
-            onRouteParamsChange({});
-          }}
-        >
-          清除所有筛选条件
-        </Button>
+        columns.length > 0 && (
+          <Button
+            onClick={() => {
+              onBindValuesChange({});
+              onFiltersChange({});
+              onSubmit({});
+              onRouteParamsChange({});
+            }}
+          >
+            清除所有筛选条件
+          </Button>
+        )
       }
       placement="right"
       title="筛选器"
