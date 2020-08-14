@@ -22,7 +22,7 @@ import Tag from "./components/Tag";
 import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
-import { Direction, Ordering } from "./types/BaseTypes";
+import { Maybe, OrderDirection, Ordering, Scalars } from "./types/BaseTypes";
 
 function dateArrayToQuery(field: string, date: string[]) {
   return `(${field}:>="${moment(date[0])
@@ -64,9 +64,9 @@ const StyledButton = styled(Button)`
 `;
 
 export interface Variables {
-  after?: string;
-  query?: string;
-  orderBy?: Ordering;
+  after?: Maybe<Scalars["String"]>;
+  query?: Maybe<Scalars["String"]>;
+  orderBy?: Maybe<Ordering>;
 }
 
 export interface FilterProps {
@@ -213,7 +213,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         query: `${parameterQuery || finalQuery} ${newFilter}`.trim(),
         orderBy: {
           field: orderByArr[0],
-          direction: Direction[orderByArr[1]],
+          direction: OrderDirection[orderByArr[1]],
         },
       };
       if (tempVariables.query === "") {
@@ -375,12 +375,12 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                     columnsSortResult.sorter && (
                       <div key={columnsSortResult.key}>
                         <StyledRadio
-                          value={`${columnsSortResult.key} ${Direction.ASC}`}
+                          value={`${columnsSortResult.key} ${OrderDirection.ASC}`}
                         >
                           {columnsSortResult.title}（正序）
                         </StyledRadio>
                         <StyledRadio
-                          value={`${columnsSortResult.key} ${Direction.DESC}`}
+                          value={`${columnsSortResult.key} ${OrderDirection.DESC}`}
                         >
                           {columnsSortResult.title}（倒序）
                         </StyledRadio>
