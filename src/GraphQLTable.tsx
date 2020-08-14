@@ -22,7 +22,7 @@ import Tag from "./components/Tag";
 import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
-import { Direction, Maybe, Ordering } from "./types/BaseTypes";
+import { Direction, Ordering } from "./types/BaseTypes";
 
 function dateArrayToQuery(field: string, date: string[]) {
   return `(${field}:>="${moment(date[0])
@@ -64,9 +64,9 @@ const StyledButton = styled(Button)`
 `;
 
 export interface Variables {
-  after?: string | null | undefined;
-  query?: string | null | undefined;
-  orderBy?: Maybe<Ordering>[] | null | undefined;
+  after?: string;
+  query?: string;
+  orderBy?: Ordering;
 }
 
 export interface FilterProps {
@@ -112,7 +112,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const [routeParams, setRouteParams] = useRouteParamsState([
     "query",
     "filter",
-    "sort",
+    "field",
     "direction",
   ]);
 
@@ -211,12 +211,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       const tempVariables = {
         ...variables,
         query: `${parameterQuery || finalQuery} ${newFilter}`.trim(),
-        orderBy: [
-          {
-            sort: orderByArr[0],
-            direction: Direction[orderByArr[1]],
-          },
-        ],
+        orderBy: {
+          field: orderByArr[0],
+          direction: Direction[orderByArr[1]],
+        },
       };
       if (tempVariables.query === "") {
         delete tempVariables.query;
@@ -226,7 +224,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       }
       onVariablesChange(tempVariables);
     },
-    [finalQuery, onVariablesChange, variables, sortValue]
+    [sortValue, variables, finalQuery, onVariablesChange]
   );
 
   const newColumns = useMemo(
@@ -275,16 +273,16 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
   useEffect(() => {
     const sort =
-      defaultSort?.sort && defaultSort?.direction
-        ? `${defaultSort?.sort} ${defaultSort?.direction}`
+      defaultSort?.field && defaultSort?.direction
+        ? `${defaultSort?.field} ${defaultSort?.direction}`
         : "";
     handelSubmitFilters(
       routeParams.filter
         ? JSON.parse(decodeURIComponent(routeParams.filter))
         : {},
       routeParams.query,
-      routeParams.sort && routeParams.direction
-        ? `${routeParams.sort} ${routeParams.direction}`
+      routeParams.field && routeParams.direction
+        ? `${routeParams.field} ${routeParams.direction}`
         : sort
     );
     if (routeParams.query) {
@@ -311,13 +309,13 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       setFilters(tempFilter);
       setBindValues(tempFilter);
     }
-    if (routeParams.sort && routeParams.direction) {
-      setSortValue(`${routeParams.sort} ${routeParams.direction}`);
-    } else if (defaultSort?.sort && defaultSort?.direction) {
-      setSortValue(`${defaultSort?.sort} ${defaultSort?.direction}`);
+    if (routeParams.field && routeParams.direction) {
+      setSortValue(`${routeParams.field} ${routeParams.direction}`);
+    } else if (defaultSort?.field && defaultSort?.direction) {
+      setSortValue(`${defaultSort?.field} ${defaultSort?.direction}`);
       setRouteParams({
         ...routeParams,
-        sort: defaultSort?.sort,
+        field: defaultSort?.field,
         direction: defaultSort?.direction,
       });
     }
@@ -367,7 +365,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                   handelSubmitFilters(filters, undefined, e.target.value);
                   setRouteParams({
                     ...routeParams,
-                    sort: sortValueArr[0],
+                    field: sortValueArr[0],
                     direction: sortValueArr[1],
                   });
                 }}
@@ -399,7 +397,11 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                       setPage(1);
                     }
                     handelSubmitFilters(filters, undefined, "");
-                    setRouteParams({ ...routeParams, sort: "", direction: "" });
+                    setRouteParams({
+                      ...routeParams,
+                      field: "",
+                      direction: "",
+                    });
                   }}
                 >
                   清除
