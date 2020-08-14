@@ -3,8 +3,6 @@ export enum Direction {
   DESC = "DESC",
 }
 
-export type Maybe<T> = T | null;
-
 export type Scalars = {
   ID: string;
   String: string;
@@ -16,6 +14,6 @@ export type Scalars = {
 };
 
 export type Ordering = {
-  sort: Scalars["String"];
-  direction?: Maybe<Direction>;
+  field?: string;
+  direction?: Direction;
 };

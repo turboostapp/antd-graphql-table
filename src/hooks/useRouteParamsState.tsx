@@ -34,17 +34,17 @@ export default function useRouteParamsState(
               delete tempNewState[key];
             }
           });
-          history.pushState(
+          window.history.pushState(
             {},
             "",
             `${window.location.pathname}?${qs.stringify(tempNewState)}`
           );
         } else {
-          history.pushState({}, "", window.location.pathname);
+          window.history.pushState({}, "", window.location.pathname);
         }
         return setState(newState);
       },
-      [history, options, query]
+      [options, query]
     ),
   ];
 }
