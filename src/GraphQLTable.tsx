@@ -346,49 +346,51 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
             setRouteParams({ ...routeParams, query: finalQuery });
           }}
         />
-        <Button
-          style={{ marginLeft: 10 }}
-          onClick={() => setDrawerVisible(true)}
-        >
-          筛选器
-        </Button>
-        <Popover
-          content={
-            <>
-              <Radio.Group
-                style={{ display: "block" }}
-                value={sortValue}
-                onChange={(e) => {
-                  const sortValueArr = e.target.value.split(" ");
-                  setSortValue(e.target.value);
-                  setPage(1);
-                  handelSubmitFilters(filters, undefined, e.target.value);
-                  setRouteParams({
-                    ...routeParams,
-                    field: sortValueArr[0],
-                    direction: sortValueArr[1],
-                  });
-                }}
-              >
-                {columnsSortResults.map(
-                  (columnsSortResult) =>
-                    columnsSortResult.sorter && (
-                      <div key={columnsSortResult.key}>
-                        <StyledRadio
-                          value={`${columnsSortResult.key} ${OrderDirection.ASC}`}
-                        >
-                          {columnsSortResult.title}（正序）
-                        </StyledRadio>
-                        <StyledRadio
-                          value={`${columnsSortResult.key} ${OrderDirection.DESC}`}
-                        >
-                          {columnsSortResult.title}（倒序）
-                        </StyledRadio>
-                      </div>
-                    )
-                )}
-              </Radio.Group>
-              {columnsSortResults.length > 0 && (
+        {columnsFilterResults.lengt > 0 && (
+          <Button
+            style={{ marginLeft: 10 }}
+            onClick={() => setDrawerVisible(true)}
+          >
+            筛选器
+          </Button>
+        )}
+        {columnsSortResults.length > 0 && (
+          <Popover
+            content={
+              <>
+                <Radio.Group
+                  style={{ display: "block" }}
+                  value={sortValue}
+                  onChange={(e) => {
+                    const sortValueArr = e.target.value.split(" ");
+                    setSortValue(e.target.value);
+                    setPage(1);
+                    handelSubmitFilters(filters, undefined, e.target.value);
+                    setRouteParams({
+                      ...routeParams,
+                      field: sortValueArr[0],
+                      direction: sortValueArr[1],
+                    });
+                  }}
+                >
+                  {columnsSortResults.map(
+                    (columnsSortResult) =>
+                      columnsSortResult.sorter && (
+                        <div key={columnsSortResult.key}>
+                          <StyledRadio
+                            value={`${columnsSortResult.key} ${OrderDirection.ASC}`}
+                          >
+                            {columnsSortResult.title}（正序）
+                          </StyledRadio>
+                          <StyledRadio
+                            value={`${columnsSortResult.key} ${OrderDirection.DESC}`}
+                          >
+                            {columnsSortResult.title}（倒序）
+                          </StyledRadio>
+                        </div>
+                      )
+                  )}
+                </Radio.Group>
                 <StyledButton
                   type="link"
                   onClick={() => {
@@ -406,17 +408,17 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                 >
                   清除
                 </StyledButton>
-              )}
-            </>
-          }
-          placement="bottomLeft"
-          title="排序方式"
-          trigger="click"
-          visible={popoverVisible}
-          onVisibleChange={(visible) => setPopoverVisible(visible)}
-        >
-          <Button style={{ marginLeft: 10 }}>排序</Button>
-        </Popover>
+              </>
+            }
+            placement="bottomLeft"
+            title="排序方式"
+            trigger="click"
+            visible={popoverVisible}
+            onVisibleChange={(visible) => setPopoverVisible(visible)}
+          >
+            <Button style={{ marginLeft: 10 }}>排序</Button>
+          </Popover>
+        )}
       </div>
       <div style={{ marginTop: 10 }}>
         {(() => {
