@@ -346,7 +346,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
             setRouteParams({ ...routeParams, query: finalQuery });
           }}
         />
-        {columnsFilterResults.lengt > 0 && (
+        {columnsFilterResults.length > 0 && (
           <Button
             style={{ marginLeft: 10 }}
             onClick={() => setDrawerVisible(true)}
