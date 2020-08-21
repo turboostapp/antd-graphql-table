@@ -286,23 +286,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         : sort
     );
     if (routeParams.query) {
-      let resultQuery = routeParams.query;
-      // 获取英文 title 名带冒号数组，例如结果为 ["domain:","tags:"]
-      const titleArr = routeParams.query.match(/(\S+):/g);
-      if (titleArr) {
-        titleArr.forEach((item) => {
-          // 用没冒号的去查找
-          const notSymbolItem = item.replace(":", "");
-          const column = columns.find((column) => column.key === notSymbolItem);
-          if (column) {
-            resultQuery = resultQuery.replace(
-              item,
-              `${column.title as string}:`
-            );
-          }
-        });
-      }
-      setQuery(resultQuery);
+      setQuery(routeParams.query);
     }
     if (routeParams.filter) {
       const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
