@@ -155,24 +155,6 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     [columns]
   );
 
-  // 将输入框上的属性名都转成对应的 key
-  const finalQuery = useMemo(() => {
-    let resultQuery = query;
-    // 匹配带冒号的，例如结果为 ["日期:","email:"]
-    const titleArr = resultQuery.match(/(\S+):/g);
-    if (titleArr) {
-      titleArr.forEach((item) => {
-        // 用没冒号的去查找
-        const notSymbolItem = item.replace(":", "");
-        const column = columns.find((column) => column.title === notSymbolItem);
-        if (column) {
-          resultQuery = resultQuery.replace(item, `${column.key}:`);
-        }
-      });
-    }
-    return resultQuery;
-  }, [columns, query]);
-
   const handelSubmitFilters = useCallback(
     (
       parameterFilters: FilterProps,
@@ -210,7 +192,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
       const tempVariables = {
         ...variables,
-        query: `${parameterQuery || finalQuery} ${newFilter}`.trim(),
+        query: `${parameterQuery || query} ${newFilter}`.trim(),
         orderBy: {
           field: orderByArr[0],
           direction: OrderDirection[orderByArr[1]],
@@ -224,7 +206,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       }
       onVariablesChange(tempVariables);
     },
-    [sortValue, variables, finalQuery, onVariablesChange]
+    [sortValue, variables, query, onVariablesChange]
   );
 
   const newColumns = useMemo(
@@ -327,7 +309,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
           onPressEnter={() => {
             setPage(1);
             handelSubmitFilters(filters);
-            setRouteParams({ ...routeParams, query: finalQuery });
+            setRouteParams({ ...routeParams, query });
           }}
         />
         {columnsFilterResults.length > 0 && (
