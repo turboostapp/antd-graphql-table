@@ -155,18 +155,23 @@ export default function FilterDrawer<T>({
           );
           return (
             <Panel header={column.title} key={key}>
-              {column.filterType === FilterType.INPUT && (
+              {(column.filterType === FilterType.INPUT ||
+                column.filterType === FilterType.INPUT_NUMBER) && (
                 <>
                   <Input
                     value={bindValues[key] ? String(bindValues[key][0]) : ""}
                     onChange={(event) => {
+                      let value = event.target.value;
+                      if (column.filterType === FilterType.INPUT_NUMBER) {
+                        value = value.replace(/[^\d]+/g, "");
+                      }
                       const tempBindValues = { ...bindValues };
-                      tempBindValues[key] = [event.target.value];
-                      if (event.target.value === "") {
+                      tempBindValues[key] = [value];
+                      if (!value) {
                         delete tempBindValues[key];
                       }
                       onBindValuesChange(tempBindValues);
-                      debounceFilterTypeInput(event.target.value, key);
+                      debounceFilterTypeInput(value, key);
                     }}
                     onBlur={(event) => {
                       // 如果计时器还在跑的时候失去焦点，清除计时器，直接执行

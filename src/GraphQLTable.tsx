@@ -23,6 +23,7 @@ import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
 import { Maybe, OrderDirection, Ordering, Scalars } from "./types/BaseTypes";
+import { FilterType } from "./types/FilterType";
 
 function dateArrayToQuery(field: string, date: string[]) {
   return `(${field}:>="${moment(date[0])
@@ -174,9 +175,12 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
             } else {
               // 如果是 string 的话，要加引号
               if (typeof newValue === "string") {
-                newValue = /(^[-+]?[0-9]+(\.[0-9]+)?)$/.test(newValue)
-                  ? newValue
-                  : `"${newValue}"`;
+                if (
+                  columns.find((column) => column.key === field).filterType !==
+                  FilterType.INPUT_NUMBER
+                ) {
+                  newValue = `"${newValue}"`;
+                }
               }
               newFilter = `${
                 newFilter ? `${newFilter} ` : ""
@@ -206,7 +210,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       }
       onVariablesChange(tempVariables);
     },
-    [sortValue, variables, query, onVariablesChange]
+    [sortValue, variables, query, onVariablesChange, columns]
   );
 
   const newColumns = useMemo(
