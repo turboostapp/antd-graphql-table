@@ -12,6 +12,13 @@
   ],
   "plugins": [
     [
+      "babel-plugin-styled-components",
+      {
+        "displayName": true,
+        "namespace": "graphqlTable"
+      }
+    ],
+    [
       "babel-plugin-import",
       {
         "libraryName": "antd",
