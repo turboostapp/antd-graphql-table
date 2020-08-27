@@ -36,7 +36,7 @@
     "keyboardjs": "^2.6.3",
     "qs": "^6.9.4",
     "react-router-dom": "^5.2.0",
-    "styled-components": "^5.1.1"
+    "styled-components": "^4.4.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.1",
