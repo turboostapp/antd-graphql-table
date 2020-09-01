@@ -139,9 +139,9 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   // 翻页快捷键
   useChangePageByKeyboard(page, handlePageChange);
 
-  // 解决 refresh 后 page 未恢复
+  // refetch 后恢复 page
   useEffect(() => {
-    if (maxPage === 2 && hasMore) {
+    if ((maxPage === 2 && hasMore) || (maxPage === 1 && !hasMore)) {
       setPage(1);
     }
   }, [hasMore, maxPage, total]);
