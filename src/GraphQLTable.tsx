@@ -7,8 +7,9 @@ import {
 } from "antd-simple-table";
 import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import omit from "lodash/omit";
-import moment from "moment";
+import qs from "qs";
 import React, {
+  Fragment,
   ReactElement,
   useCallback,
   useEffect,
@@ -18,39 +19,12 @@ import React, {
 import styled from "styled-components";
 
 import FilterDrawer from "./components/FilterDrawer";
+import { Pagination } from "./components/Pagination";
 import Tag from "./components/Tag";
-import useChangePageByKeyboard from "./hooks/useChangePageByKeyboard";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
-import { Maybe, OrderDirection, Ordering, Scalars } from "./types/BaseTypes";
-import { FilterType } from "./types/FilterType";
-
-function dateArrayToQuery(field: string, date: string[]) {
-  return `(${field}:>="${moment(date[0])
-    .startOf("d")
-    .toDate()
-    .toISOString()}" ${field}:<="${moment(date[1])
-    .endOf("d")
-    .toDate()
-    .toISOString()}")`;
-}
-
-const StyledGraphQLTable = styled.div`
-  .ant-pagination-item,
-  .ant-pagination-options,
-  .ant-pagination-jump-prev,
-  .ant-pagination-jump-next {
-    display: none !important;
-  }
-
-  .ant-table-pagination-right {
-    float: none;
-  }
-
-  .ant-table-pagination.ant-pagination {
-    text-align: center;
-  }
-`;
+import { OrderDirection, Ordering, PageInfo } from "./types/BaseTypes";
+import { filterToQuery } from "./utils/filterToQuery";
 
 const StyledRadio = styled(Radio)`
   display: block;
@@ -65,9 +39,12 @@ const StyledButton = styled(Button)`
 `;
 
 export interface Variables {
-  after?: Maybe<Scalars["String"]>;
-  query?: Maybe<Scalars["String"]>;
-  orderBy?: Maybe<Ordering>;
+  first?: number | null;
+  last?: number | null;
+  before?: string | null;
+  after?: string | null;
+  query?: string | null;
+  orderBy?: Ordering | null;
 }
 
 export interface FilterProps {
@@ -75,32 +52,26 @@ export interface FilterProps {
 }
 
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
-  dataSource: T[];
+  id: string;
   columns: Array<GraphQLTableColumnType<T>>;
-  hasMore: boolean;
-  variables?: Variables | null;
-  defaultSort?: Ordering;
-  onLoadMore?: () => void | Promise<void>;
-  onVariablesChange: (variables: Variables) => void;
+  pageInfo?: PageInfo;
+  onVariablesChange: (
+    variables: Variables,
+    pageType?: "prev" | "next" | undefined
+  ) => void;
 }
 
 export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const {
+    id,
     columns,
-    dataSource = [],
-    hasMore,
-    loading,
-    variables = {},
-    defaultSort,
-    onLoadMore,
+    pageInfo = { hasPreviousPage: false, hasNextPage: false },
     onVariablesChange,
   } = props;
 
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [popoverVisible, setPopoverVisible] = useState(false);
-  const [sortValue, setSortValue] = useState("");
+  const [sortValue, setSortValue] = useState(null);
 
   const [query, setQuery] = useState<string>("");
 
@@ -110,41 +81,97 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   // 筛选处理后的值
   const [filters, setFilters] = useState<FilterProps>({});
 
-  const [routeParams, setRouteParams] = useRouteParamsState([
-    "query",
-    "filter",
-    "field",
-    "direction",
-  ]);
-
-  const total = useMemo(
-    () => (hasMore ? dataSource.length + pageSize : dataSource.length),
-    [dataSource.length, hasMore, pageSize]
+  const [routeParams, setRouteParams] = useRouteParamsState(
+    ["query", "filter", "orderBy"],
+    id
   );
 
-  const maxPage = useMemo(() => Math.ceil(total / pageSize), [total, pageSize]);
-
-  const handlePageChange = useCallback(
-    async (nextPage: number) => {
-      if (!loading && nextPage >= 1 && nextPage <= maxPage) {
-        if (hasMore && nextPage > page && nextPage === maxPage) {
-          await onLoadMore();
-        }
-        setPage(nextPage);
-      }
-    },
-    [hasMore, loading, maxPage, onLoadMore, page]
-  );
-
-  // 翻页快捷键
-  useChangePageByKeyboard(page, handlePageChange);
-
-  // refetch 后恢复 page
+  // 页面初始化
   useEffect(() => {
-    if ((maxPage === 2 && hasMore) || (maxPage === 1 && !hasMore)) {
-      setPage(1);
+    const tempVariables: Variables = {};
+
+    const queryParams = qs.parse(window.location.search, {
+      ignoreQueryPrefix: true,
+    });
+    if (queryParams.before) {
+      tempVariables.last = 10;
+      tempVariables.before = queryParams.before as string;
+    } else {
+      tempVariables.first = 10;
+      tempVariables.after = queryParams.after as string;
     }
-  }, [hasMore, maxPage, total]);
+
+    if (routeParams.query) {
+      setQuery(routeParams.query);
+      tempVariables.query = routeParams.query;
+    }
+    if (routeParams.filter) {
+      const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
+      setFilters(tempFilter);
+      setBindValues(tempFilter);
+      tempVariables.query = `${tempVariables.query || ""} ${filterToQuery(
+        tempFilter,
+        columns
+      )}`.trim();
+    }
+    if (routeParams.orderBy) {
+      const decodeSortValue = decodeURIComponent(routeParams.orderBy);
+      setSortValue(decodeSortValue);
+      tempVariables.orderBy = JSON.parse(decodeSortValue);
+    }
+
+    onVariablesChange(tempVariables);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 点击筛选或排序触发
+  const handleVariablesChange = useCallback(
+    (parameterFilters?: FilterProps, parameterOrderBy?: string) => {
+      // filter 转换成 query
+      const changedQuery = filterToQuery(parameterFilters || filters, columns);
+
+      // 改变筛选或排序后只需要 query 和 orderBy，不需要 before after
+      const tempVariables = {
+        first: 10,
+        query: `${query} ${changedQuery}`.trim(),
+        // parameterOrderBy 有值是刚改变， null 是清空，其它是改变筛选时使用 sortValue
+        orderBy: JSON.parse(
+          parameterOrderBy || parameterOrderBy === null
+            ? parameterOrderBy
+            : sortValue
+        ),
+      };
+      if (!tempVariables.query) {
+        delete tempVariables.query;
+      }
+      if (!tempVariables.orderBy) {
+        delete tempVariables.orderBy;
+      }
+
+      onVariablesChange(tempVariables);
+
+      return tempVariables;
+    },
+    [filters, query, sortValue, onVariablesChange, columns]
+  );
+
+  // 需要传给 Pagination 用
+  const variables = useMemo(() => {
+    const changedQuery = filterToQuery(filters, columns);
+
+    const tempVariables = {
+      query: `${query} ${changedQuery}`.trim(),
+      orderBy: JSON.parse(sortValue),
+    };
+    if (!tempVariables.query) {
+      delete tempVariables.query;
+    }
+    if (!tempVariables.orderBy) {
+      delete tempVariables.orderBy;
+    }
+
+    return tempVariables;
+  }, [columns, filters, query, sortValue]);
 
   const columnsFilterResults = useMemo(
     () => columns.filter((column) => column.filters || column.filterType),
@@ -154,63 +181,6 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const columnsSortResults = useMemo(
     () => columns.filter((column) => column.sorter),
     [columns]
-  );
-
-  const handelSubmitFilters = useCallback(
-    (
-      parameterFilters: FilterProps,
-      parameterQuery?: string,
-      parameterOrderBy?: string
-    ) => {
-      let newFilter = "";
-      Object.entries(parameterFilters).forEach(([field, values]) => {
-        if (values && values[0] !== "") {
-          values.forEach((value) => {
-            let newValue = value;
-            // Array 是日期格式，转换成 ISO 格式
-            if (newValue instanceof Array) {
-              newFilter = `${
-                newFilter ? `${newFilter} ` : ""
-              }${dateArrayToQuery(field, newValue)}`;
-            } else {
-              // 如果是 string 的话，要加引号
-              if (typeof newValue === "string") {
-                if (
-                  columns.find((column) => column.key === field).filterType !==
-                  FilterType.INPUT_NUMBER
-                ) {
-                  newValue = `"${newValue}"`;
-                }
-              }
-              newFilter = `${
-                newFilter ? `${newFilter} ` : ""
-              }${field}:${newValue}`;
-            }
-          });
-        }
-      });
-
-      const orderByArr = parameterOrderBy
-        ? parameterOrderBy.split(" ")
-        : sortValue.split(" ");
-
-      const tempVariables = {
-        ...variables,
-        query: `${parameterQuery || query} ${newFilter}`.trim(),
-        orderBy: {
-          field: orderByArr[0],
-          direction: OrderDirection[orderByArr[1]],
-        },
-      };
-      if (tempVariables.query === "") {
-        delete tempVariables.query;
-      }
-      if (!orderByArr || orderByArr.length !== 2 || parameterOrderBy === "") {
-        delete tempVariables.orderBy;
-      }
-      onVariablesChange(tempVariables);
-    },
-    [sortValue, variables, query, onVariablesChange, columns]
   );
 
   const newColumns = useMemo(
@@ -243,7 +213,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                   tempFilters[column.key] = [tagItem[0]];
                 }
                 setFilters(tempFilters);
-                handelSubmitFilters(tempFilters);
+                handleVariablesChange(tempFilters);
                 setRouteParams({
                   ...routeParams,
                   filter: encodeURIComponent(JSON.stringify(tempFilters)),
@@ -254,46 +224,11 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         }
         return omit(column, ["filters", "sorter"]);
       }),
-    [columns, filters, handelSubmitFilters, routeParams, setRouteParams]
+    [columns, filters, handleVariablesChange, routeParams, setRouteParams]
   );
 
-  useEffect(() => {
-    const sort =
-      defaultSort?.field && defaultSort?.direction
-        ? `${defaultSort?.field} ${defaultSort?.direction}`
-        : "";
-    handelSubmitFilters(
-      routeParams.filter
-        ? JSON.parse(decodeURIComponent(routeParams.filter))
-        : {},
-      routeParams.query,
-      routeParams.field && routeParams.direction
-        ? `${routeParams.field} ${routeParams.direction}`
-        : sort
-    );
-    if (routeParams.query) {
-      setQuery(routeParams.query);
-    }
-    if (routeParams.filter) {
-      const tempFilter = JSON.parse(decodeURIComponent(routeParams.filter));
-      setFilters(tempFilter);
-      setBindValues(tempFilter);
-    }
-    if (routeParams.field && routeParams.direction) {
-      setSortValue(`${routeParams.field} ${routeParams.direction}`);
-    } else if (defaultSort?.field && defaultSort?.direction) {
-      setSortValue(`${defaultSort?.field} ${defaultSort?.direction}`);
-      setRouteParams({
-        ...routeParams,
-        field: defaultSort?.field,
-        direction: defaultSort?.direction,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <StyledGraphQLTable>
+    <div>
       <FilterDrawer
         bindValues={bindValues}
         columns={columnsFilterResults}
@@ -304,15 +239,14 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         onClose={() => setDrawerVisible(false)}
         onFiltersChange={setFilters}
         onRouteParamsChange={setRouteParams}
-        onSubmit={handelSubmitFilters}
+        onSubmit={handleVariablesChange}
       />
       <div style={{ display: "flex" }}>
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           onPressEnter={() => {
-            setPage(1);
-            handelSubmitFilters(filters);
+            handleVariablesChange(filters);
             setRouteParams({ ...routeParams, query });
           }}
         />
@@ -332,48 +266,41 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                   style={{ display: "block" }}
                   value={sortValue}
                   onChange={(e) => {
-                    const sortValueArr = e.target.value.split(" ");
                     setSortValue(e.target.value);
-                    setPage(1);
-                    handelSubmitFilters(filters, undefined, e.target.value);
+                    handleVariablesChange(filters, e.target.value);
                     setRouteParams({
                       ...routeParams,
-                      field: sortValueArr[0],
-                      direction: sortValueArr[1],
+                      orderBy: encodeURIComponent(e.target.value),
                     });
                   }}
                 >
-                  {columnsSortResults.map(
-                    (columnsSortResult) =>
-                      columnsSortResult.sorter && (
-                        <div key={columnsSortResult.key}>
-                          <StyledRadio
-                            value={`${columnsSortResult.key} ${OrderDirection.ASC}`}
-                          >
-                            {columnsSortResult.title}（正序）
-                          </StyledRadio>
-                          <StyledRadio
-                            value={`${columnsSortResult.key} ${OrderDirection.DESC}`}
-                          >
-                            {columnsSortResult.title}（倒序）
-                          </StyledRadio>
-                        </div>
-                      )
-                  )}
+                  {columnsSortResults.map((columnsSortResult) => (
+                    <Fragment key={columnsSortResult.key}>
+                      <StyledRadio
+                        value={JSON.stringify({
+                          field: columnsSortResult.key,
+                          direction: OrderDirection.ASC,
+                        })}
+                      >
+                        {columnsSortResult.title}（正序）
+                      </StyledRadio>
+                      <StyledRadio
+                        value={JSON.stringify({
+                          field: columnsSortResult.key,
+                          direction: OrderDirection.DESC,
+                        })}
+                      >
+                        {columnsSortResult.title}（倒序）
+                      </StyledRadio>
+                    </Fragment>
+                  ))}
                 </Radio.Group>
                 <StyledButton
                   type="link"
                   onClick={() => {
-                    setSortValue("");
-                    if (sortValue !== "") {
-                      setPage(1);
-                    }
-                    handelSubmitFilters(filters, undefined, "");
-                    setRouteParams({
-                      ...routeParams,
-                      field: "",
-                      direction: "",
-                    });
+                    setSortValue(null);
+                    handleVariablesChange(filters, null);
+                    setRouteParams({ ...routeParams, orderBy: null });
                   }}
                 >
                   清除
@@ -440,7 +367,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
                   filter: encodeURIComponent(JSON.stringify(tempFilters)),
                 });
                 setFilters(tempFilters);
-                handelSubmitFilters(tempFilters);
+                handleVariablesChange(tempFilters);
               }}
             >
               {columns.find((column) => column.key === tag.field)?.title ||
@@ -454,14 +381,14 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         // eslint-disable-next-line react/jsx-props-no-spreading
         {...props}
         columns={newColumns}
-        dataSource={dataSource.slice((page - 1) * pageSize, page * pageSize)}
-        pagination={{
-          current: page,
-          pageSize,
-          total,
-          onChange: handlePageChange,
-        }}
+        pagination={false}
       />
-    </StyledGraphQLTable>
+      <Pagination
+        id={id}
+        pageInfo={pageInfo}
+        onVariablesChange={onVariablesChange}
+        variables={variables}
+      />
+    </div>
   );
 }
