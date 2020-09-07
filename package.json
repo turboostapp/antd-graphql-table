@@ -35,7 +35,6 @@
     "antd-simple-table": "^1.4.6",
     "keyboardjs": "^2.6.3",
     "qs": "^6.9.4",
-    "react-router-dom": "^5.2.0",
     "styled-components": "^4.4.1"
   },
   "devDependencies": {
@@ -52,7 +51,6 @@
     "@types/lodash": "^4.14.155",
     "@types/qs": "^6.9.3",
     "@types/react": "^16.9.37",
-    "@types/react-router-dom": "^5.1.5",
     "@types/storybook__addon-info": "^5.2.1",
     "@types/styled-components": "^5.1.0",
     "@typescript-eslint/eslint-plugin": "^3.3.0",

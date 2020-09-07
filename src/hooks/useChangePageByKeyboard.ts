@@ -2,18 +2,12 @@ import keyboard from "keyboardjs";
 import { useEffect } from "react";
 
 export default function useChangePageByKeyboard(
-  page: number,
-  handle: (nextPage: number) => Promise<void>
-) {
+  onLoadPrev: () => void | Promise<void>,
+  onLoadNext: () => void | Promise<void>
+): void {
   useEffect(() => {
-    keyboard.bind(["command + left", "ctrl + left"], () => handle(page - 1));
-    keyboard.bind(["command + right", "ctrl + right"], () => handle(page + 1));
-    return () =>
-      keyboard.unbind([
-        "command + left",
-        "ctrl + left",
-        "command + right",
-        "ctrl + right",
-      ]);
-  }, [handle, page]);
+    keyboard.bind("j", onLoadPrev);
+    keyboard.bind("k", onLoadNext);
+    return () => keyboard.unbind(["j", "k"]);
+  }, [onLoadNext, onLoadPrev]);
 }

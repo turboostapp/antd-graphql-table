@@ -3,19 +3,15 @@ export enum OrderDirection {
   DESC = "DESC",
 }
 
-export type Maybe<T> = T | null;
-
-export type Scalars = {
-  ID: string;
-  String: string;
-  Boolean: boolean;
-  Int: number;
-  Float: number;
-  DateTime: any;
-  JSONObject: any;
+export type Ordering = {
+  direction?: OrderDirection | null;
+  field: string;
 };
 
-export type Ordering = {
-  direction?: Maybe<OrderDirection>;
-  field: Scalars["String"];
+export type PageInfo = {
+  __typename?: "PageInfo";
+  endCursor?: string | null;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+  startCursor?: string | null;
 };

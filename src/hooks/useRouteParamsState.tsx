@@ -1,11 +1,17 @@
-import { pick } from "lodash";
+import { omit, pick } from "lodash";
 import qs from "qs";
-import { Dispatch, SetStateAction, useCallback, useState } from "react";
-
-import { useQuery } from "./useReactRouterQuery";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
+import { useLocalStorage } from "react-use";
 
 export default function useRouteParamsState(
-  options: string[]
+  options: string[],
+  id: string
 ): [
   { [key: string]: string },
   Dispatch<
@@ -14,26 +20,43 @@ export default function useRouteParamsState(
     }>
   >
 ] {
-  const query = useQuery();
+  const queryParams = useMemo(
+    () => qs.parse(window.location.search, { ignoreQueryPrefix: true }),
+    []
+  );
+
   const [state, setState] = useState<{
     [key: string]: string;
   }>(
-    pick(query, options) as {
+    pick(queryParams, options) as {
       [key: string]: string;
     }
+  );
+
+  const [, setLocalStorageValue] = useLocalStorage(
+    `graphql-table-query-params:${id}`
   );
 
   return [
     state,
     useCallback(
       (newState) => {
-        if (Object.keys(newState).length > 0) {
-          const tempNewState = { ...query, ...pick(newState, options) };
-          Object.keys(newState).forEach((key) => {
-            if (!newState[key] || decodeURIComponent(newState[key]) === "{}") {
-              delete tempNewState[key];
-            }
-          });
+        const tempNewState = {
+          // 改变筛选或排序时删除 before after，从第一页开始
+          ...omit(queryParams, ["before", "after"]),
+          ...newState,
+        };
+
+        // filter 为空时删除
+        Object.keys(newState).forEach((key) => {
+          if (!newState[key] || decodeURIComponent(newState[key]) === "{}") {
+            delete tempNewState[key];
+          }
+        });
+
+        setLocalStorageValue(tempNewState);
+
+        if (Object.keys(tempNewState).length > 0) {
           window.history.pushState(
             {},
             "",
@@ -42,9 +65,10 @@ export default function useRouteParamsState(
         } else {
           window.history.pushState({}, "", window.location.pathname);
         }
+
         return setState(newState);
       },
-      [options, query]
+      [queryParams, setLocalStorageValue]
     ),
   ];
 }

@@ -117,7 +117,7 @@ export default function FilterDrawer<T>({
             onBindValuesChange({});
             onFiltersChange({});
             onSubmit({});
-            onRouteParamsChange({});
+            onRouteParamsChange({ ...routeParams, filter: "{}" });
           }}
         >
           清除所有筛选条件
