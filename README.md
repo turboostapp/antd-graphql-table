@@ -145,7 +145,12 @@ const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
 <GraphQLTable
   id="user"
   onVariablesChange={(variables) =>
-    getDiscounts({ variables: { ...variables, query: "name:"123"" } })
+    getDiscounts({
+      variables: {
+        ...variables,
+        query: `${variables.query || ""} name:"123"`.trim(),
+      },
+    })
   }
 />
 ```
