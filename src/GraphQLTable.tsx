@@ -16,6 +16,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import { useLocalStorage } from "react-use";
 import styled from "styled-components";
 
 import FilterDrawer from "./components/FilterDrawer";
@@ -73,6 +74,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const [popoverVisible, setPopoverVisible] = useState(false);
   const [sortValue, setSortValue] = useState(null);
 
+  const [, setLocalStorageValue] = useLocalStorage(
+    `graphql-table-query-params:${id}`
+  );
+
   const [query, setQuery] = useState<string>("");
 
   // 筛选控件绑定的值
@@ -98,7 +103,9 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       tempVariables.before = queryParams.before as string;
     } else {
       tempVariables.first = 10;
-      tempVariables.after = queryParams.after as string;
+      if (queryParams.after) {
+        tempVariables.after = queryParams.after as string;
+      }
     }
 
     if (routeParams.query) {
@@ -119,6 +126,8 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       setSortValue(decodeSortValue);
       tempVariables.orderBy = JSON.parse(decodeSortValue);
     }
+
+    setLocalStorageValue(queryParams);
 
     onVariablesChange(tempVariables);
     // eslint-disable-next-line react-hooks/exhaustive-deps
