@@ -133,11 +133,15 @@ export const Pagination: FC<PaginationProps> = ({
         tempVariables.before = pageInfo.startCursor;
       }
 
-      window.history.pushState(
-        {},
-        "",
-        `${window.location.pathname}?${qs.stringify(newQueryParams)}`
-      );
+      if (Object.keys(newQueryParams).length > 0) {
+        window.history.pushState(
+          {},
+          "",
+          `${window.location.pathname}?${qs.stringify(newQueryParams)}`
+        );
+      } else {
+        window.history.pushState({}, "", window.location.pathname);
+      }
 
       setLocalStorageValue(newQueryParams);
 
@@ -164,11 +168,15 @@ export const Pagination: FC<PaginationProps> = ({
         newQueryParams.after = pageInfo.endCursor;
       }
 
-      window.history.pushState(
-        {},
-        "",
-        `${window.location.pathname}?${qs.stringify(newQueryParams)}`
-      );
+      if (Object.keys(newQueryParams).length > 0) {
+        window.history.pushState(
+          {},
+          "",
+          `${window.location.pathname}?${qs.stringify(newQueryParams)}`
+        );
+      } else {
+        window.history.pushState({}, "", window.location.pathname);
+      }
 
       setLocalStorageValue(newQueryParams);
 
