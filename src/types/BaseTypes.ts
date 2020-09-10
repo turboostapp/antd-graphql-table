@@ -4,7 +4,7 @@ export enum OrderDirection {
 }
 
 export type Ordering = {
-  direction?: OrderDirection | null;
+  direction: OrderDirection;
   field: string;
 };
 
