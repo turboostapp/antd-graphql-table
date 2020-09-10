@@ -1,7 +1,7 @@
 import { withInfo } from "@storybook/addon-info";
 import { storiesOf } from "@storybook/react";
 import { ValueType } from "antd-simple-table";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { FilterType, GraphQLTable } from "../src";
 const stories = storiesOf("Table1", module);
@@ -16,6 +16,7 @@ stories.addParameters({
 
 stories.add("base", () => {
   const [pageInfo, setPageInfo] = useState(undefined);
+  const ref = useRef(null);
 
   // 模拟请求
   useEffect(() => {
@@ -31,6 +32,8 @@ stories.add("base", () => {
 
   return (
     <GraphQLTable
+      onRefresh={() => ref.current.clear()}
+      ref={ref}
       id="as"
       pageInfo={pageInfo}
       onVariablesChange={(value) => console.log(value)}

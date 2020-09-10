@@ -3,6 +3,8 @@
 - [✨ 特色功能](#-特色功能)
 - [📦 安装](#-安装)
 - [API](#api)
+  - [props](#props)
+  - [method](#method)
 - [🔨 使用说明](#-使用说明)
   - [筛选器配置](#筛选器配置)
   - [翻页配置](#翻页配置)
@@ -10,6 +12,7 @@
     - [最简单用法](#最简单用法)
     - [自定义每次请求的 variables](#自定义每次请求的-variables)
     - [自定义每页条数](#自定义每页条数)
+    - [清空筛选、排序、localstorage、url](#清空筛选排序localstorageurl)
 
 <center>
   <a class="other-link" href="https://github.com/shadowolfapp/antd-simple-table" alt="https://github.com/shadowolfapp/antd-simple-table"><i class="fab fa-github-square fa-2x" ></i></a>
@@ -35,12 +38,22 @@ npm i antd-graphql-table
 
 ## API
 
+### props
+
 | 参数              | 说明                                                                             | 类型                                                                                                                                |
 | ----------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | columns           | 列配置                                                                           | Array<GraphQLTableColumnType\<T>>                                                                                                   |
 | id                | 筛选排序分页参数存进 localstorage 的 key 值为 `graphql-table-query-params:${id}` | string                                                                                                                              |
 | PageInfo          | 分页需提供的参数                                                                 | { \_\_typename?: "PageInfo";startCursor?: string \| null; endCursor?: string \| null;hasPreviousPage: boolean;hasNextPage: boolean} |
 | onVariablesChange | 页面第一次加载、筛选排序分页改变时触发回调事件                                   | function(variables, pageType: "prev" \|"next")                                                                                      |
+
+<br />
+
+### method
+
+| 名称    | 说明                              |
+| ------- | --------------------------------- |
+| clear() | 清空筛选、排序、localstorage、url |
 
 <br/>
 
@@ -188,4 +201,19 @@ const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
    }
   }
 />
+```
+
+<br />
+
+#### 清空筛选、排序、localstorage、url
+
+```javascript
+const ref = useRef(null);
+
+<GraphQLTable
+  ref={ref}
+  onRefresh={() => {
+    ref.current.clear();
+  }}
+/>;
 ```

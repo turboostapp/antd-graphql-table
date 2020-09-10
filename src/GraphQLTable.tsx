@@ -9,10 +9,12 @@ import { CheckboxValueType } from "antd/lib/checkbox/Group";
 import omit from "lodash/omit";
 import qs from "qs";
 import React, {
+  forwardRef,
   Fragment,
   ReactElement,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useState,
 } from "react";
@@ -62,7 +64,7 @@ export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   ) => void;
 }
 
-export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
+function OriginGraphQLTable<T>(props: GraphQLTableProps<T>, ref): ReactElement {
   const {
     id,
     columns,
@@ -90,6 +92,18 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     ["query", "filter", "orderBy"],
     id
   );
+
+  // 清空，外部使用 ref.current.clear() 执行
+  useImperativeHandle(ref, () => ({
+    clear: () => {
+      setFilters({});
+      setBindValues({});
+      setQuery("");
+      setSortValue(null);
+      setLocalStorageValue({});
+      window.history.pushState({}, "", window.location.pathname);
+    },
+  }));
 
   // 页面初始化
   useEffect(() => {
@@ -401,3 +415,5 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     </div>
   );
 }
+
+export const GraphQLTable = forwardRef(OriginGraphQLTable);
