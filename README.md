@@ -9,7 +9,6 @@
   - [graphql 请求参数设置](#graphql-请求参数设置)
     - [最简单用法](#最简单用法)
     - [自定义每次请求的 variables](#自定义每次请求的-variables)
-    - [自定义每页条数](#自定义每页条数)
 
 <center>
   <a class="other-link" href="https://github.com/shadowolfapp/antd-simple-table" alt="https://github.com/shadowolfapp/antd-simple-table"><i class="fab fa-github-square fa-2x" ></i></a>
@@ -39,8 +38,9 @@ npm i antd-graphql-table
 | ----------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | columns           | 列配置                                                                           | Array<GraphQLTableColumnType\<T>>                                                                                                   |
 | id                | 筛选排序分页参数存进 localstorage 的 key 值为 `graphql-table-query-params:${id}` | string                                                                                                                              |
+| pageSize          | 自定义每页条数，默认为 10                                                        | string \| number                                                                                                                    |
 | PageInfo          | 分页需提供的参数                                                                 | { \_\_typename?: "PageInfo";startCursor?: string \| null; endCursor?: string \| null;hasPreviousPage: boolean;hasNextPage: boolean} |
-| onVariablesChange | 页面第一次加载、筛选排序分页改变时触发回调事件                                   | function(variables, pageType: "prev" \|"next")                                                                                      |
+| onVariablesChange | 页面第一次加载、筛选排序分页改变时触发回调事件                                   | function(variables: Variables)                                                                                                      |
 
 <br/>
 
@@ -96,6 +96,7 @@ FilterType 目前支持的值类型如下：
 ```javascript
 // 需使用没有缓存的策略 no-cache，可以避免很多缓存问题
 const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
+  notifyOnNetworkStatusChange: true,
   fetchPolicy: "no-cache",
 });
 
@@ -130,6 +131,7 @@ history.push(
 ```javascript
 // 需使用没有缓存的策略 no-cache，可以避免很多缓存问题
 const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
+  notifyOnNetworkStatusChange: true,
   fetchPolicy: "no-cache",
 });
 
@@ -151,41 +153,6 @@ const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
         query: `${variables.query || ""} name:"123"`.trim(),
       },
     })
-  }
-/>
-```
-
-<br />
-
-#### 自定义每页条数
-
-```javascript
-<GraphQLTable
-  id="user"
-  onVariablesChange={(variables, pageInfo) => {
-    // 点击上一页触发
-    if(pageInfo === "prev) {
-      getDiscounts({ variables: { ...variables, last: 20 } })
-    }
-    // 点击下一页触发
-    else if(pageInfo === "next) {
-      getDiscounts({ variables: { ...variables, first: 20 } })
-    }
-    // 页面第一次加载或改变筛选排序时触发，需判断 url 有无 before
-    else {
-      const queryParams = qs.parse(window.location.search, {
-       ignoreQueryPrefix: true,
-      });
-
-      getDiscounts({
-        variables: {
-        ...variables,
-        first: queryParams.before ? null : 20,
-        last: queryParams.before ? 20 : null,
-        },
-      });
-    }
-   }
   }
 />
 ```

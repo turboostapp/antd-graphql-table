@@ -24,7 +24,7 @@ import { Pagination } from "./components/Pagination";
 import Tag from "./components/Tag";
 import useRouteParamsState from "./hooks/useRouteParamsState";
 import { GraphQLTableColumnType } from "./interfaces/GraphQLTableColumnType";
-import { OrderDirection, Ordering, PageInfo } from "./types/BaseTypes";
+import { OrderDirection, PageInfo, Variables } from "./types/BaseTypes";
 import { filterToQuery } from "./utils/filterToQuery";
 
 const StyledRadio = styled(Radio)`
@@ -39,15 +39,6 @@ const StyledButton = styled(Button)`
   padding: 4px 0;
 `;
 
-export interface Variables {
-  first?: number | null;
-  last?: number | null;
-  before?: string | null;
-  after?: string | null;
-  query?: string | null;
-  orderBy?: Ordering | null;
-}
-
 export interface FilterProps {
   [key: string]: (CheckboxValueType | [string, string])[];
 }
@@ -55,17 +46,16 @@ export interface FilterProps {
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   id: string;
   columns: Array<GraphQLTableColumnType<T>>;
+  pageSize?: string | number;
   pageInfo?: PageInfo;
-  onVariablesChange: (
-    variables: Variables,
-    pageType?: "prev" | "next" | undefined
-  ) => void;
+  onVariablesChange: (variables: Variables) => void;
 }
 
 export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const {
     id,
     columns,
+    pageSize = 10,
     pageInfo = { hasPreviousPage: false, hasNextPage: false },
     onVariablesChange,
   } = props;
@@ -99,10 +89,10 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       ignoreQueryPrefix: true,
     });
     if (queryParams.before) {
-      tempVariables.last = 10;
+      tempVariables.last = Number(pageSize);
       tempVariables.before = queryParams.before as string;
     } else {
-      tempVariables.first = 10;
+      tempVariables.first = Number(pageSize);
       if (queryParams.after) {
         tempVariables.after = queryParams.after as string;
       }
@@ -141,7 +131,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
       // 改变筛选或排序后只需要 query 和 orderBy，不需要 before after
       const tempVariables = {
-        first: 10,
+        first: Number(pageSize),
         query: `${query} ${changedQuery}`.trim(),
         // parameterOrderBy 有值是刚改变， null 是清空，其它是改变筛选时使用 sortValue
         orderBy: JSON.parse(
@@ -161,7 +151,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
       return tempVariables;
     },
-    [filters, query, sortValue, onVariablesChange, columns]
+    [filters, columns, pageSize, query, sortValue, onVariablesChange]
   );
 
   // 需要传给 Pagination 用
@@ -394,6 +384,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       />
       <Pagination
         id={id}
+        pageSize={pageSize}
         pageInfo={pageInfo}
         onVariablesChange={onVariablesChange}
         variables={variables}
