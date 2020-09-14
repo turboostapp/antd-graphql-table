@@ -32,6 +32,10 @@ const IconWrapper = styled.span`
 
   &:hover {
     background: #c4cdd5;
+
+    svg {
+      fill: #212b36;
+    }
   }
 `;
 
@@ -39,10 +43,6 @@ const StyledSvg = styled.svg`
   height: 20px;
   width: 20px;
   fill: #637381;
-
-  &:hover {
-    fill: #212b36;
-  }
 `;
 
 interface TagProps {
