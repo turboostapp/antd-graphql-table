@@ -5,9 +5,8 @@ import React, { FC, useCallback, useMemo } from "react";
 import { useLocalStorage } from "react-use";
 import styled from "styled-components";
 
-import { Variables } from "../GraphQLTable";
 import useChangePageByKeyboard from "../hooks/useChangePageByKeyboard";
-import { PageInfo } from "../types/BaseTypes";
+import { PageInfo, Variables } from "../types/BaseTypes";
 
 const PaginationWrapper = styled.div<{ visible: boolean }>`
   display: ${(props) => (props.visible ? "flex" : "none")};
@@ -93,19 +92,18 @@ const StyledRightOutlined = styled(RightOutlined)`
 
 export interface PaginationProps {
   id: string;
+  pageSize: string | number;
   pageInfo: PageInfo;
   variables: Variables;
-  onVariablesChange: (
-    variables: Variables,
-    pageType?: "prev" | "next" | undefined
-  ) => void;
+  onVariablesChange: (variables: Variables) => void;
 }
 
 export const Pagination: FC<PaginationProps> = ({
   id,
   variables,
-  onVariablesChange,
+  pageSize,
   pageInfo,
+  onVariablesChange,
 }) => {
   const [, setLocalStorageValue] = useLocalStorage(
     `graphql-table-query-params:${id}`
@@ -126,7 +124,7 @@ export const Pagination: FC<PaginationProps> = ({
       const newQueryParams = omit({ ...queryParams }, ["after"]);
 
       const tempVariables = { ...variables };
-      tempVariables.last = 10;
+      tempVariables.last = Number(pageSize);
 
       if (pageInfo.startCursor) {
         newQueryParams.before = pageInfo.startCursor;
@@ -145,11 +143,12 @@ export const Pagination: FC<PaginationProps> = ({
 
       setLocalStorageValue(newQueryParams);
 
-      onVariablesChange(tempVariables, "prev");
+      onVariablesChange(tempVariables);
     }
   }, [
     onVariablesChange,
     pageInfo,
+    pageSize,
     queryParams,
     setLocalStorageValue,
     variables,
@@ -161,7 +160,7 @@ export const Pagination: FC<PaginationProps> = ({
       const newQueryParams = omit({ ...queryParams }, ["before"]);
 
       const tempVariables = { ...variables };
-      tempVariables.first = 10;
+      tempVariables.first = Number(pageSize);
 
       if (pageInfo.endCursor) {
         tempVariables.after = pageInfo.endCursor;
@@ -180,11 +179,12 @@ export const Pagination: FC<PaginationProps> = ({
 
       setLocalStorageValue(newQueryParams);
 
-      onVariablesChange(tempVariables, "next");
+      onVariablesChange(tempVariables);
     }
   }, [
     onVariablesChange,
     pageInfo,
+    pageSize,
     queryParams,
     setLocalStorageValue,
     variables,
