@@ -33,6 +33,7 @@ stories.add("base", () => {
     <GraphQLTable
       id="as"
       pageInfo={pageInfo}
+      options={false}
       onVariablesChange={(value) => console.log(value)}
       columns={[
         {
