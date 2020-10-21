@@ -1,3 +1,4 @@
+import { SearchOutlined } from "@ant-design/icons";
 import { Button, Input, Popover, Radio } from "antd";
 import {
   SimpleTable,
@@ -39,12 +40,31 @@ const StyledButton = styled(Button)`
   padding: 4px 0;
 `;
 
+const SearchButton = styled.span`
+  padding: 0 16px;
+`;
+
+const SearchWrapper = styled.div`
+  display: flex;
+  margin-bottom: 20px;
+  .ant-input-group-addon {
+    cursor: pointer;
+    user-select: none;
+
+    color: #888;
+    :hover {
+      background-color: #f0f0f0;
+    }
+  }
+`;
+
 export interface FilterProps {
   [key: string]: (CheckboxValueType | [string, string])[];
 }
 
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   id: string;
+  placeholder?: string;
   columns: Array<GraphQLTableColumnType<T>>;
   pageSize?: string | number;
   pageInfo?: PageInfo;
@@ -55,6 +75,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const {
     id,
     columns,
+    placeholder = "",
     pageSize = 10,
     pageInfo = { hasPreviousPage: false, hasNextPage: false },
     onVariablesChange,
@@ -240,9 +261,21 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
         onRouteParamsChange={setRouteParams}
         onSubmit={handleVariablesChange}
       />
-      <div style={{ display: "flex" }}>
+      <SearchWrapper>
         <Input
           value={query}
+          placeholder={placeholder}
+          prefix={<SearchOutlined />}
+          addonAfter={
+            <SearchButton
+              onClick={() => {
+                handleVariablesChange(filters);
+                setRouteParams({ ...routeParams, query });
+              }}
+            >
+              搜索
+            </SearchButton>
+          }
           onChange={(event) => setQuery(event.target.value)}
           onPressEnter={() => {
             handleVariablesChange(filters);
@@ -315,7 +348,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
             <Button style={{ marginLeft: 10 }}>排序</Button>
           </Popover>
         )}
-      </div>
+      </SearchWrapper>
       <div style={{ marginTop: 10 }}>
         {(() => {
           const tagList: Array<{
