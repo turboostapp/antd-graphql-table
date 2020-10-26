@@ -7,7 +7,7 @@ import {
   Input,
   Radio,
 } from "antd";
-import moment from "moment";
+import moment from "moment-timezone";
 import React, { ReactElement, useEffect, useRef } from "react";
 import styled from "styled-components";
 
@@ -216,10 +216,31 @@ export default function FilterDrawer<T>({
                       onChange={(dates, dateStrings) => {
                         const tempBindValues = { ...bindValues };
                         const tempFilters = { ...filters };
-                        tempBindValues[key] = [dateStrings];
+                        const dateArr: [string, string] = [
+                          moment(dateStrings[0])
+                            .startOf("d")
+                            .format("YYYY-MM-DD HH:mm:ss"),
+                          moment(dateStrings[1])
+                            .endOf("d")
+                            .format("YYYY-MM-DD HH:mm:ss"),
+                        ];
+                        if (
+                          column.filterType === FilterType.DATE_RANGE_PICKER
+                        ) {
+                          tempBindValues[key] = [dateArr];
+                        } else {
+                          tempBindValues[key] = [dateStrings];
+                        }
+
                         onBindValuesChange(tempBindValues);
                         if (dates) {
-                          tempFilters[key] = [dateStrings];
+                          if (
+                            column.filterType === FilterType.DATE_RANGE_PICKER
+                          ) {
+                            tempFilters[key] = [dateArr];
+                          } else {
+                            tempFilters[key] = [dateStrings];
+                          }
                         } else {
                           delete tempBindValues[key];
                           delete tempFilters[key];

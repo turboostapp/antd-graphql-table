@@ -65,6 +65,7 @@ export interface FilterProps {
 export interface GraphQLTableProps<T> extends SimpleTableProps<T> {
   id: string;
   placeholder?: string;
+  timezone?: string;
   columns: Array<GraphQLTableColumnType<T>>;
   pageSize?: string | number;
   pageInfo?: PageInfo;
@@ -76,6 +77,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
     id,
     columns,
     placeholder = "",
+    timezone = "UTC",
     pageSize = 10,
     pageInfo = { hasPreviousPage: false, hasNextPage: false },
     onVariablesChange,
@@ -129,7 +131,8 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
       setBindValues(tempFilter);
       tempVariables.query = `${tempVariables.query || ""} ${filterToQuery(
         tempFilter,
-        columns
+        columns,
+        timezone
       )}`.trim();
     }
     if (routeParams.orderBy) {
@@ -148,7 +151,11 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
   const handleVariablesChange = useCallback(
     (parameterFilters?: FilterProps, parameterOrderBy?: string) => {
       // filter 转换成 query
-      const changedQuery = filterToQuery(parameterFilters || filters, columns);
+      const changedQuery = filterToQuery(
+        parameterFilters || filters,
+        columns,
+        timezone
+      );
 
       // 改变筛选或排序后只需要 query 和 orderBy，不需要 before after
       const tempVariables = {
@@ -172,12 +179,12 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
 
       return tempVariables;
     },
-    [filters, columns, pageSize, query, sortValue, onVariablesChange]
+    [filters, columns, timezone, pageSize, query, sortValue, onVariablesChange]
   );
 
   // 需要传给 Pagination 用
   const variables = useMemo(() => {
-    const changedQuery = filterToQuery(filters, columns);
+    const changedQuery = filterToQuery(filters, columns, timezone);
 
     const tempVariables = {
       query: `${query} ${changedQuery}`.trim(),
