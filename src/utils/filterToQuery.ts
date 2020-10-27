@@ -5,8 +5,7 @@ import { dateArrayToQuery } from "./dateArrayToQuery";
 
 export function filterToQuery<T>(
   filters: FilterProps,
-  columns: Array<GraphQLTableColumnType<T>>,
-  timezone: string
+  columns: Array<GraphQLTableColumnType<T>>
 ): string {
   let query = "";
   Object.entries(filters).forEach(([field, values]) => {
@@ -17,8 +16,7 @@ export function filterToQuery<T>(
         if (newValue instanceof Array) {
           query = `${query ? `${query} ` : ""}${dateArrayToQuery(
             field,
-            newValue,
-            timezone
+            newValue
           )}`;
         } else {
           // 如果是 string 的话，要加引号

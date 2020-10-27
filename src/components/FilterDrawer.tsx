@@ -7,7 +7,7 @@ import {
   Input,
   Radio,
 } from "antd";
-import moment from "moment-timezone";
+import moment from "moment";
 import React, { ReactElement, useEffect, useRef } from "react";
 import styled from "styled-components";
 
