@@ -1,15 +1,7 @@
-import moment from "moment-timezone";
+import moment from "moment";
 
-export function dateArrayToQuery(
-  field: string,
-  date: string[],
-  timezone: string
-): string {
-  return `(${field}:>="${moment
-    .tz(date[0], timezone)
+export function dateArrayToQuery(field: string, date: string[]): string {
+  return `(${field}:>="${moment(date[0])
     .toDate()
-    .toISOString()}" ${field}:<="${moment
-    .tz(date[1], timezone)
-    .toDate()
-    .toISOString()}")`;
+    .toISOString()}" ${field}:<="${moment(date[1]).toDate().toISOString()}")`;
 }

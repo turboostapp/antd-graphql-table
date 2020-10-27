@@ -34,7 +34,6 @@
     "antd": "^4.5.3",
     "antd-simple-table": "^1.4.8",
     "keyboardjs": "^2.6.3",
-    "moment-timezone": "^0.5.31",
     "qs": "^6.9.4",
     "react-router-dom": "^5.2.0",
     "styled-components": "^4.4.1"
