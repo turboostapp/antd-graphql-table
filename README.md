@@ -106,10 +106,10 @@ FilterType 目前支持的值类型如下：
 
 ### 翻页配置
 
-&emsp;需配置 **PageInfo** 和 **id**
+&emsp;需配置 **PageInfo**
 
 ```javascript
-// 需使用没有缓存的策略 no-cache，可以避免很多缓存问题
+// 需使用没有缓存的策略 no-cache
 const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
   notifyOnNetworkStatusChange: true,
   fetchPolicy: "no-cache",
@@ -118,22 +118,9 @@ const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
 <GraphQLTable id="user" PageInfo={data?.discounts.pageInfo} />;
 ```
 
-&emsp; **id** 配置了之后，会把筛选排序分页的参数存到 localstorage 里，在需要的地方可以利用它来跳转到原来的地方。
-
-```javascript
-// 例如返回上一页
-history.push(
-  `/xxx?${qs.stringify(
-    JSON.parse(localStorage.getItem("graphql-table-query-params:user") || "{}")
-  )}`
-);
-```
-
 <br/>
 
 ### graphql 请求参数设置
-
-<br />
 
 &emsp; 组件暴露出一个 **onVariablesChange** 方法，提供两个参数 **variables**、**pageInfo**，包含筛选排序和翻页（query、orderBy、after、before、first、last）
 
@@ -144,7 +131,7 @@ history.push(
 #### 最简单用法
 
 ```javascript
-// 需使用没有缓存的策略 no-cache，可以避免很多缓存问题
+// 需使用没有缓存的策略 no-cache
 const [getDiscounts, { data, loading, refetch }] = useDiscountsLazyQuery({
   notifyOnNetworkStatusChange: true,
   fetchPolicy: "no-cache",
