@@ -65,6 +65,16 @@ stories.add("base", () => {
           ],
         },
         {
+          title: "标签",
+          key: "tags",
+          dataIndex: "tags",
+          width: 120,
+          sorter: true,
+          valueType: {
+            type: ValueType.TAG,
+          },
+        },
+        {
           title: "颜色",
           key: "color",
           dataIndex: "color",
@@ -101,6 +111,7 @@ stories.add("base", () => {
           account: 123456,
           switch: "开启",
           color: "黑色",
+          tags: ["标签1", "标签2"],
           date: 1593712260997,
           dateTime: 1593722930997,
         },
@@ -108,6 +119,7 @@ stories.add("base", () => {
           account: 111111,
           switch: "关闭",
           color: "白色",
+          tags: ["标签3", "标签4"],
           date: 1593761110997,
           dateTime: 1593761130997,
         },
