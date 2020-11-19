@@ -213,7 +213,7 @@ export function GraphQLTable<T>(props: GraphQLTableProps<T>): ReactElement {
             !(column.valueType as TagValueObjectType<T>)?.onClick)
         ) {
           return {
-            ...column,
+            ...omit(column, ["filters", "sorter"]),
             valueType: {
               type: ValueType.TAG,
               onClick: (tagItem) => {
