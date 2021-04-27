@@ -132,7 +132,7 @@ export default function FilterDrawer<T>({
       <Collapse expandIconPosition="right">
         {columns.map((column) => {
           const { key } = column;
-
+          console.log("test");
           const ClearButton = (
             <StyledButton
               type="link"
